@@ -8,20 +8,31 @@ const Upload = (props) => {
   const [authed, setAuthed] = useState(false)
   const [success, setSuccess] = useState(false)
   const [fail, setFail] = useState(false)
+  const [init, setInit] = useState(false)
+  const [updateStatusChecked, setUpdateStatusChecked] = useState(true); // Default value true
 
-  // When accessed, send otp (if its my id)
-  axios.post(`${props.host}/uploadEntry`, {id: sessionStorage.getItem('id')})
-  .then((res) => {
-    // Success
-    setLoading(false)
-    setAuthed(true)
 
-  })
-  .catch((res) => {
-    // Unauthorized, probably
-    setLoading(false)
-    setAuthed(false)
-  })
+  if (!init)
+  {
+    setInit(true)
+
+    // When accessed, send otp (if its my id)
+    axios.post(`${props.host}/uploadEntry`, {id: sessionStorage.getItem('id')})
+    .then((res) => {
+      // Success
+      setLoading(false)
+      setAuthed(true)
+
+    })
+    .catch((res) => {
+      // Unauthorized, probably
+      setLoading(false)
+      setAuthed(false)
+    })
+
+  }
+
+  
 
 
   const handleUpload = async (event) => {
@@ -31,13 +42,17 @@ const Upload = (props) => {
 
         // Access form fields using event.target.elements
         const otp = event.target.elements.otp.value;
-        const file = event.target.elements.file.files[0];
+        const file = event.target.elements.file.files[0]; 
+        const msg = event.target.elements.msg.value;
+        const status = updateStatusChecked
 
 
         const formData = new FormData();
         formData.append('file', file); // What did they upload
+        formData.append('msg', msg); // What did they upload
         formData.append('otp', otp); // What did they upload
         formData.append('id', sessionStorage.getItem('id')) // Who uploaded
+        formData.append('status', status); // What did they upload
 
         await axios.post(`${props.host}/upload`, formData, {
           headers: {
@@ -49,6 +64,7 @@ const Upload = (props) => {
 
         })
         .catch((res) => {
+          console.log(res)
           setFail(true)
 
         })
@@ -63,7 +79,7 @@ const Upload = (props) => {
   const formStyle = {
     textAlign: 'center',
     maxWidth: '400px',
-    padding: '20px',
+    padding: '10px',
     border: '1px solid #ddd',
     borderRadius: '8px',
     backgroundColor: '#fff',
@@ -96,6 +112,11 @@ const Upload = (props) => {
     fontSize: '1em',
   };
 
+  const checkboxStyle = {
+    marginLeft: '5px',
+  };
+
+
   if (loading)
   {
     //reurn nothing
@@ -114,12 +135,27 @@ const Upload = (props) => {
     else if (authed)
     {
       return (
+        <div>
         <form onSubmit={handleUpload} style={formStyle}>
-          <h1 style={{ color: '#333' }}>Binary Upload</h1>
+          <h1 style={{ color: '#333' }}>Admin Portal</h1>
           <label htmlFor="file" style={labelStyle}>
-            Choose a file:
+            Upload Binaries:
           </label>
-          <input type="file" name="file" id="file" required style={inputStyle} />
+          <input type="file" name="file" id="file" style={inputStyle} />
+          <br />
+          
+          <input
+          type="checkbox"
+          name="updateStatus"
+          id="updateStatus"
+          defaultChecked={updateStatusChecked}
+          style={checkboxStyle}
+          onChange={() => setUpdateStatusChecked(!updateStatusChecked)}
+        />
+        <label htmlFor="updateStatus" style={{ color: '#555', marginLeft: '5px' }}>
+          Status:
+        </label>
+        <input type="text" name="msg" id="msg" style={inputStyle} />
           <br />
           <label htmlFor="otp" style={labelStyle}>
             OTP:
@@ -127,9 +163,11 @@ const Upload = (props) => {
           <input type="text" name="otp" id="otp" required style={inputStyle} />
           <br />
           <button type="submit" style={buttonStyle}>
-            Upload File
+            Upload
           </button>
         </form>
+
+        </div>
       );
 
     }

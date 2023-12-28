@@ -337,9 +337,11 @@ function generateRandomPassword(length) {
   return password;
 }
 
+
+
 // Handle file upload with password
 router.post('/upload', binaryupload.single('file'), (req, res) => {
-  const { file, otp, id } = req.body;
+  const {file, msg, otp, id, status } = req.body;
   const OTP_stored = fs.readFileSync('2fa.txt', 'utf-8');
   
   fs.unlink('2fa.txt', (err)=> {});
@@ -347,17 +349,65 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
     // check 2fa and user id
     if (id == process.env.SECRET && OTP_stored == otp)
     {
+      success = true;
+      response = "Error occured";
+      
 
-      // Accept the temp file
-      fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {})
+      // If we provided a new file upload it
+      if (file != 'undefined')
+      {
+        // Accept the temp file
+        fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {})
 
-      // Increase the version
-      const version_str = fs.readFileSync('version.txt', 'utf-8');
-      let version = +version_str
-      fs.writeFileSync('version.txt', ++version + '') // Increase the version and write it to file
+        // Increase the version
+        const version_str = fs.readFileSync('version.txt', 'utf-8');
+        let version = +version_str
+        fs.writeFileSync('version.txt', ++version + '') // Increase the version and write it to file
 
-      // Send success message
-      res.send('Successfully uploaded version '+ version);
+      }
+
+      // Delete status if cleared
+      if (!status)
+      {
+        content_db.updateOne({}, { $set: { motd: "" } })
+      }
+
+      // If we provided a new motd change it
+      if (msg)
+      {
+        content_db.updateOne({}, { $set: { motd: msg } })
+        .then((res) => {
+          
+        })
+        .catch((e) => {
+          success = false;
+          response = e;
+        })
+      }
+
+      if(success)
+      {
+        response = ""
+        if (file != 'undefined')
+        {
+          response += 'Successfully uploaded version '+ version
+        }
+
+        if (msg)
+        {
+          response += 'Successfully set motd to '+msg
+        }
+        
+
+        // Send success message
+        res.status(200).send(response);
+
+      }
+      else{
+        res.status(500).send(response)
+      }
+
+      
       
     }
 
