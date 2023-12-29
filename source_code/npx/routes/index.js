@@ -122,6 +122,40 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Unlink a user's spotify and musicbox account
+router.post('/unlink', async(req,res) => {
+  const id = req.body.id
+  const user = await User.findOne({'_id': id});
+  if (user)
+  {
+    user.refresh_token = ""
+    await user.save()
+    res.send("Unlinked!")
+
+  }
+  else
+  {
+    //404 user not found
+    res.status(404).send("User not found")
+  }
+})
+
+// Get whether or not a user has linked their spotify given uid
+router.post('/isLinked', async(req, res) => {
+  const id = req.body.id
+  const user = await User.findOne({'_id': id});
+  if (user)
+  {
+    res.send(user.refresh_token? true : false)
+
+  }
+  else
+  {
+    //404 user not found
+    res.status(404).send("User not found")
+  }
+})
+
 // From ESP, get the refresh token from DB 
 router.post('/authorize_musicbox', async(req,res) => {
   const username = req.body.username;
@@ -199,6 +233,9 @@ router.get('/auth-callback', async(req, res) => {
       // We don't need to store the access token, because it only lasts an hour
       const refreshToken = response.data.refresh_token;
       User.findOneAndUpdate({'_id': uid}, {'refresh_token': refreshToken})
+      .then((user) => {
+        console.log (user)
+      })
 
       res.redirect(redir+"?state=success")
 
@@ -248,36 +285,6 @@ router.get('/getMotd', (req, res) => {
 
 })
 
-// uplaod binaries
-// router.post('/upload', uploadResume.single('resume'), (req, res) => {
-//   const sourcePath = path.join(__dirname, '..', 'public', 'resume_temp.pdf');
-//   const destinationPath = path.join(__dirname, '..', 'public', 'resume_peter_buonaiuto.pdf');
-
-//   // The file is saved as "resume_peter_buonaiuto.pdf" in the "public" folder
-//   if (req.body.id == process.env.SECRET)
-//   {
-//     // Accept the temp file
-//     fs.rename(sourcePath, destinationPath, (err) => {
-//       if (err) {
-//         console.error(err);
-//       } else {
-//         console.log('File has been uploaded successfully.');
-//       }
-//     });
-//     res.json({ message: 'File uploaded successfully' });
-  
-//   }
-//   else{
-
-//     fs.unlink(sourcePath, (err)=> {});
-//     res.status(403)
-//     res.json("UNAUTHORIZED")
-
-//   }
-  
-  
-  
-// });
 
 // Read the current version
 router.get('/version', (req,res) => {
@@ -367,7 +374,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
       }
 
       // Delete status if cleared
-      if (!status)
+      if (status == "false")
       {
         content_db.updateOne({}, { $set: { motd: "" } })
       }
