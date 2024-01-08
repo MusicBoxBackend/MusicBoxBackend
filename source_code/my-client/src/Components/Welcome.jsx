@@ -18,21 +18,20 @@ const Welcome = (props) => {
 
     
     const containerStyle = {
-        padding: '20px',
+        paddingTop: '60px',
         textAlign: 'center',
         fontFamily: 'Comic Sans MS', // Use a nice font
-        height: '100vh'
       };
     
       const titleStyle = {
-        fontSize: '80px',
+        fontSize: '3rem',
         marginBottom: '10px',
         color: 'rgb(92, 119, 226)'
       };
     
       const sloganStyle = {
         fontSize: '20px',
-        color: '#666', // A subdued color for the slogan
+        color: 'gray',
         marginBottom: '20px',
       };
     
@@ -56,6 +55,9 @@ const Welcome = (props) => {
         )}
           <div style={titleStyle}>MUSIC BOX</div>
           <div style={sloganStyle}>Playlists made easier than ever.</div>
+          <div style = {{position: 'relative', left: '0px', paddingTop: '120px'}}>
+            <img src = "icon.png" width = "150px" alt = "product"></img>
+          </div>
           
         </div>
       );

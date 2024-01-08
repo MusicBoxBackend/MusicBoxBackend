@@ -1,59 +1,4 @@
 
-#test {
-display:inline-block;
-}
-
-
-#image
-{
-	display:inline-block;
-	
-}
-
-
-#entry
-{
-width:400px;
-}
-
-#numberlabel
-{
-	padding: 10px;
-	text-align: center;
-	vertical-align: bottom ;
-}
-
-
-
-
-
-
-
-#new1 {
-
-	display:inline-block;
-
-}
-
-#new-item, #refresh {
-	padding-left:10px;
-
-	display:inline-block;
-	
-	transform: translateY(-5%);
-
-}
-
-
-
-#card-border{
-	padding-left: 25px;
-	padding-top: 15px;
-	padding-right: 15px;
-	display:inline-block;
-	overflow-y:auto;
-}
-
 #content
 {
 	overflow-y:auto;
@@ -73,131 +18,33 @@ width:400px;
 	
 }
 
-#qty {
-	width:100%;
-}
-
-#item-qty {
-	float: right;
-}
-
-.card-text {
-	display:inline-block
-}
-
-#form-entry {
-	display:inline-block;
-	position: absolute;
-	top:100px;
-}
-
-#desc {
-	padding-left:160px;
-	display:inline-block;
-}
-
-#details {
-	height:294px;
-}
-
-#desc-label {
-	display:block;
-}
+/* Placeholder text clashes with form input */
+.form-control::placeholder {
+	color: #cccccc; /* Set the color you want */
+  }
 
 
-#left-entry {
-	display:inline-block;
-	vertical-align: top ;
-}
-
-#currentItem {
-	display:inline-block
-}
-
-
-#card {
-width: 27rem;
-height: 16rem;
- 
- transition: transform .2s;
-
-}
-
-#inventory-card {
-	width: 16rem;
-	height: 20rem;
-	 
-	 transition: transform .2s;
-	
-	}
-
-#card:hover, #inventory-card:hover {
-	
-	transform: scale(1.05);
-	cursor:pointer;
-}
-
-#card-img-container
-{
-	display: flex; /* Set the container as a flex container */
-  justify-content: center; /* Center the content horizontally */
-  align-items: center; /* Center the content vertically */
-}
-#card-img{
-	margin:auto;
-
-	object-fit: cover;
-}
-
-#page-update
-{
-	display:none;
-}
-
-#curItemPreview
-{
-	transform: scale(2);
-}
-
-#modify-item-btns {
-	width:100%;
-	padding-top: 95px;
-	display:inline-block;
-}
-
-#delete-item
-{
-	float:left;
-}
-
-#confirm-item
-{
-	float:right;
-}
-
-.dropdown
-{
-	display:inline-block;
-	padding-left: 20px;
-}
-
-
-#left-nav
-{
-	float:left;
-}
-
-#imgInput, #nameInput, #qtyInput {
-	max-width:300px;
+.oval-button {
+	padding-right: 5%;
+	padding-left: 5%;
+	padding-top: 2%;
+	padding-bottom: 2%;
+    border-radius: 30px;  /* Half of the height to create an oval shape */
+    background-color: rgb(92, 119, 226);  /* Button background color */
+    color: #c5c5c5;  /* Text color */
+    font-size: 16px;  /* Adjust font size */
+    border: none;  /* Remove border */
+    cursor: pointer;
 }
 
 #toggle-authmode-btn
-{ background:none; border:none; }
+{ background:none; border:none;}
 
 #toggle-authmode
 {
 	padding-left: 10px;
 	display:inline;
+	
 }
 
 #errorMsg
@@ -223,18 +70,14 @@ height: 16rem;
 {
 	padding-left:5px;
 	transform: translateY(-10%);
-
+	color:rgb(92, 119, 226);
 }
 
-#socials
-{
-	position: fixed;
-	bottom: 0;
-	left: 50%;
-	transform: translateX(-50%);
-	text-align: center;
-	padding: 10px;
-}
+
+hr {
+	border: 0.8px solid #999; /* Border color */
+	margin: 20px 0; /* Margin top and bottom */
+  }
 
 ul.navbar {
 	list-style-type: none;
@@ -243,15 +86,11 @@ ul.navbar {
 	overflow: hidden;
   }
 
-  ul.navbar li {
-	float: left;
-  }
-
   ul.navbar li a {
 	display: block;
 	color: gray; /* Set default text color */
 	text-align: center;
-	padding: 14px 16px;
+	padding: 12px 12px;
 	text-decoration: none;
   }
 
@@ -265,143 +104,54 @@ ul.navbar {
 	font-weight: 600;
   }
 
+  /* Laptop styles */
+  @media (min-width: 768px) {
+	.navbar-container {
+		justify-content: flex-end;
+	}
+	.login {
+		padding-top: 20px;
+	}
+  }
+
+  /* Mobil Styles */
+  @media(max-width: 768px) {
+	.navbar-container {
+		justify-content: space-around;
+	}
+	.login {
+		padding-top: 30%;
+	}
+  }
+
+  .login {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+
+  }
+
+
+	/* Styles for all browsers (outside of a media tag)*/
   .navbar-container {
 	display: flex;
-	justify-content: flex-end;
 	position:relative;
 	top: 10px;
   }
 
-
-  #welcome
-  {
-	position: relative;
-	left:100px;
-  }
-
-  #introduction
-  {
-	display:flex;
-	margin-right: 10px;
-  }
-  #sub-welcome
-  {
-	position: relative;
-	left:-125px;
-  }
-
-  #project-preview
-  {
-	display: flex;
-  	align-items: center;
-  }
-
-#new-project-btn
-{
-	float: right;
-	margin-right: 10px;
-}
-
-.modal {
-	display: none;
-	position: fixed;
-	z-index: 1;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	overflow: auto;
-	background-color: rgba(0, 0, 0, 0.5);
+  /* Remove yellow background color on autofill */
+input:-webkit-autofill {
+	-webkit-box-shadow: 0 0 0 30px rgb(190, 190, 190) inset !important; /* Set to desired background color */
   }
   
-  .modal-content {
-	background-color: #fefefe;
-	margin: 10% auto;
-	padding: 20px;
-	border: 1px solid #888;
-	width: 80%;
-  }
-  
-  .close {
-	color: #aaa;
-	float: right;
-	font-size: 28px;
-	font-weight: bold;
-	cursor: pointer;
-  }
-  
-  .close:hover,
-  .close:focus {
-	color: black;
-	text-decoration: none;
-	cursor: pointer;
-  }
-  
-#blog
-{
-	/* Must make the blog on the righthand 20% of screen */
-	width: 20%;
-	border: 1px solid gray;
-	position: fixed;
-  	right: 0px;
-	top: 10vh;
-	height:85vh;
-	background-color: #f4f4f4;
-	padding-top: 5px;
-}
-
-#posts
-{
-	display: flex;
-  	flex-direction: column;
-	overflow: auto;
-	width:100%;
-	height:94%;
-}
-
-#post
-{
-	border-radius: 5%;
-	border: 1px dashed gray;
-	transition: transform 0.2s ease-in-out;
-  	cursor: pointer;
-	position: relative;
-	margin:8px
-}
-
-#post:hover {
-	transform: scale(1.05);
+  /* Autofill box when focused */
+  input:-webkit-autofill:focus {
+	-webkit-box-shadow: 0 0 0 30px white inset !important; /* Set to desired background color */
+	border-color: inherit; /* Reset border color */
+	outline: none; /* Remove focus outline */
   }
 
-#post-date {
-  	position: absolute;
-  	bottom: -2vh;
-  	right: 0;
-	font-size:small;
-	font-weight: 100;
-}
 
-#blog-header {
-	display: flex;
-	align-items: center;
-	position:relative;
-	top:5px;
-	width:100%;
-  }
-
-  .header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	background-color: #f0f0f0;
-	padding: 10px;
-  }
-  
-  .left-section,
-  .right-section {
-	display: flex;
-	align-items: center;
-  }
   
   .icon {
 	cursor: pointer;
@@ -412,45 +162,4 @@ ul.navbar {
 	border-bottom: 1px solid #007bff;
   }
 
-  /* inactive skill listing CSS */
-  .skill-listing {
-	color: gray; /* Set default text color */
-	text-decoration: none;
-	font-weight: 200;
-  }
 
-  ul.skills li p:hover {
-	color: rgb(92, 119, 226);
-	cursor: pointer;
-  }
-
-  /* CSS for the underlined class */
-  .skill-listing.active {
-	color: rgb(92, 119, 226);
-	font-weight: 300;
-  }
-
-  ul.skills {
-	list-style-type: circle;
-	
-
-  }
-
-  .ql-video {
-	width: 538px; /* Adjust the width to make the video wider */
-	height: 302px; /* Adjust the height to make the video taller */
-  }
-
-  blockquote {
-	border-left: 4px solid #ccc;
-	margin-bottom: 5px;
-	margin-top: 5px;
-	margin-left: 1000px;
-	
-  }
-
-.social
-{
-	margin-left: 5px;
-	margin-right: 5px;
-}

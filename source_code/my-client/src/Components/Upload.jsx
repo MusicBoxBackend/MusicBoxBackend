@@ -1,35 +1,44 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import axios from 'axios';
 
 
 const Upload = (props) => {
 
-  const [loading, setLoading] = useState(true)
   const [authed, setAuthed] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [fail, setFail] = useState(false)
-  const [init, setInit] = useState(false)
   const [updateStatusChecked, setUpdateStatusChecked] = useState(true); // Default value true
 
+  // Auth user when accessing page
+  // Look into why it runs twice
+  useEffect(() => {
+    if (loading)
+    {
+      axios.post(`${props.host}/authAdmin`, {id: sessionStorage.getItem('id')})
+      .then((res) => {
+        // Success
+        setAuthed(true)
+        setLoading(false)
 
-  if (!init)
-  {
-    setInit(true)
+      })
+      .catch((res) => {
+        // Unauthorized, probably
+        setAuthed(false)
+        setLoading(false)
+      })
 
+    }
+    
+
+  }, [props.host, loading])
+
+
+
+  const sendOTP = () => {
     // When accessed, send otp (if its my id)
-    axios.post(`${props.host}/uploadEntry`, {id: sessionStorage.getItem('id')})
-    .then((res) => {
-      // Success
-      setLoading(false)
-      setAuthed(true)
-
-    })
-    .catch((res) => {
-      // Unauthorized, probably
-      setLoading(false)
-      setAuthed(false)
-    })
-
+    axios.post(`${props.host}/sendOTP`, {id: sessionStorage.getItem('id')})
+    
   }
 
   
@@ -82,7 +91,7 @@ const Upload = (props) => {
     padding: '10px',
     border: '1px solid #ddd',
     borderRadius: '8px',
-    backgroundColor: '#fff',
+    backgroundColor: '#eeeeee',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
     margin: '0 auto', 
   };
@@ -106,6 +115,7 @@ const Upload = (props) => {
     backgroundColor: '#007bff',
     color: '#fff',
     padding: '10px 20px',
+    margin: '10px',
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
@@ -116,13 +126,14 @@ const Upload = (props) => {
     marginLeft: '5px',
   };
 
-
   if (loading)
   {
-    //reurn nothing
+
   }
   else
   {
+
+  
     if (success)
     {
       return ("succces")
@@ -162,9 +173,14 @@ const Upload = (props) => {
           </label>
           <input type="text" name="otp" id="otp" required style={inputStyle} />
           <br />
+          <button onClick= {sendOTP} style={buttonStyle}>
+            Send OTP
+          </button>
+
           <button type="submit" style={buttonStyle}>
             Upload
           </button>
+          
         </form>
 
         </div>
@@ -175,8 +191,8 @@ const Upload = (props) => {
     {
       return (<>Unauthorized</>)
     }
-  }
   
+  }
 };
 
 export default Upload;

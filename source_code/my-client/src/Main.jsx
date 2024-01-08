@@ -39,7 +39,7 @@ const Main = () => {
     
     <BrowserRouter>
     {/* Global background color */}
-    <div style={{ backgroundColor: '#f0f0f0', height: '100vh' }} >
+    <div style={{ backgroundColor: '#1A1A1A', height: '100vh' }} >
     <Nav token = {getToken}></Nav>
       <Routes>
           <Route index element={<Welcome token = {getToken} host = {host}/>} />

@@ -106,17 +106,17 @@ const Account = (props) =>
             alignItems: 'center',
             flexDirection: 'column',
             
-            height: '100vh'
+            paddingTop: '20px'
         }}>
-            <p style={{ fontSize:'30px', fontWeight:'100'}}>MODIFY ACCOUNT</p>
+            <p style={{ fontSize:'30px', fontWeight:'100', color: 'rgb(92, 119, 226)'}}>MODIFY ACCOUNT</p>
                 <form>
                     <div className="form-group">
-                        <label style = {{marginLeft:'5px'}}>Username</label>
+                        <label style = {{marginLeft:'5px', color: 'gray'}}>Username</label>
                         <input style = {{margin:'5px'}} type="text" value ={username} className="form-control" onInput={handleNameChange} id="usernameInput"  placeholder="Enter username"></input>
                     </div>
 
                     <div className="form-group">
-                        <label style = {{marginLeft:'5px'}}>Password</label>
+                        <label style = {{marginLeft:'5px', color: 'gray'}}>Password</label>
                         <img src="eye.png" id="eye" alt="O" width="23px" onMouseOver={mouseoverPass} onMouseOut={mouseoutPass} />
                         <input style = {{margin:'5px'}} type="password" className="form-control" onInput={validateData} id="passwordInput" placeholder="Enter password"></input>
                         
@@ -124,7 +124,7 @@ const Account = (props) =>
 
                     <p id = "errorMsg">Error msg</p>
 
-                    <div style = {{margin:'5px', display:'flex', justifyContent:'space-between'}}>
+                    <div style = {{margin:'5px', display:'flex', justifyContent:'space-between', paddingTop: '20px'}}>
                         <button type="button" className="btn btn-outline-secondary" id = "logout" onClick = {logout} disabled = {sessionStorage.getItem('id') == null}>Logout</button>
                         <button style = {{marginRight:'-10px'}}type="button" className="btn btn-outline-primary" id = "login-btn" onClick = {updateAccount}>Update</button>
 

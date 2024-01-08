@@ -16,9 +16,6 @@ export default function Login(props) {
 
     // auth mode change should verify data again
 
-
-    
-
     function updatePassword()
     {
         validateData()
@@ -49,6 +46,7 @@ export default function Login(props) {
                 sessionStorage.setItem('admin', response.data.admin);
                 if (redir)
                 {
+                    window.location.reload()
                     navigate(redir);
 
                 }
@@ -166,43 +164,35 @@ export default function Login(props) {
     
     
   return(
-    <div>
-        <div style = {{
-        display: 'flex',
-        alignItems: 'center',
-        flexDirection: 'column',
-        height: '100vh'
-        }}>
-            <p style={{ fontSize:'30px', fontWeight:'100'}}>{authMode.toUpperCase()}</p>
-                    <form>
-                        <div className="form-group">
-                            <input type="text" style = {{margin:'5px'}} className="form-control" id="usernameInput" onInput={updateUsername} placeholder="Username"></input>
-                        </div>
+        <div class = "login">
+            <p style={{ fontSize:'30px', fontWeight:'100', color: 'rgb(92, 119, 226)'}}>{authMode.toUpperCase()}</p>
+                <form style = {{with: '100%'}}>
+                    <div className="form-group">
+                        <input type="text" style = {{margin:'5px'}} className="form-control" id="usernameInput" onInput={updateUsername} placeholder="Username"></input>
+                    </div>
 
-                        <div className="form-group">
-                            <input type="password" style = {{margin:'5px'}} className="form-control" id="passwordInput" onInput={updatePassword} placeholder="Password"></input>
-                        </div>
+                    <div className="form-group">
+                        <input type="password" style = {{margin:'5px'}} className="form-control" id="passwordInput" onInput={updatePassword} placeholder="Password"></input>
+                    </div>
 
-                        <p id = "errorMsg">Error msg</p>
+                    <p id = "errorMsg">Error msg</p>
 
-                        <div style = {{margin:'5px', marginTop:'15px'}}>
-                            <button type="button" className="btn btn-outline-primary" id = "login-btn" onClick = {authMode === AUTH_LOGIN ? login : signup}>{authMode}</button>
-                            <div id = "toggle-authmode">
-                                <span>Or</span>
-                                <button type="button" id = "toggle-authmode-btn" onClick = {toggleLoginSignup}>{(authMode === AUTH_LOGIN ? AUTH_SIGNUP: AUTH_LOGIN).toLowerCase()}</button>
-                                <span>instead</span>
-                            </div>
-                            
+                    <div style = {{margin:'5px', marginTop:'15px'}}>
+                        <button type="button" className="oval-button" id = "login-btn" onClick = {authMode === AUTH_LOGIN ? login : signup}>{authMode}</button>
+                        <div id = "toggle-authmode" style = {{color: 'rgb(92, 119, 226)'}}>
+                            <span>Or</span>
+                            <button type="button" id = "toggle-authmode-btn" onClick = {toggleLoginSignup} style = {{ color: 'gray'}}>{(authMode === AUTH_LOGIN ? AUTH_SIGNUP: AUTH_LOGIN).toLowerCase()}</button>
+                            <span>instead</span>
                         </div>
+                        
+                    </div>
 
-                        <div>
-                            <p>{props.msg}</p>
-                        </div>
-                    </form>
+                    <div>
+                        <p style = {{ color: 'gray', paddingTop: '40px', textAlign: 'center'}}>{props.msg}</p>
+                    </div>
+                </form>
             </div>
 
-            
-        </div>
 
    
   )
