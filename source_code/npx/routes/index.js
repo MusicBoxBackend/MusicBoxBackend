@@ -54,8 +54,15 @@ connect();
 // Set up DB!
 // User schema for DB
 const userSchema = new mongoose.Schema({
-  username: String,
-  password: String,
+  username: {
+    type: String,
+    unique: true, // Enforces uniqueness
+    required: true // Makes the field mandatory
+  },
+  password: {
+    type: String,
+    required: true
+  },
   refresh_token: String,
   admin: Boolean
 });
@@ -273,7 +280,7 @@ router.get('/getMotd', (req, res) => {
   content_db.find({}).toArray()
   .then(data => {
     res.status(200)
-    res.json(data[0]['motd'])
+    res.json(data[0])
   })
   .catch(error => {
     console.error(error);
@@ -366,41 +373,56 @@ function generateRandomPassword(length) {
 // Handle file upload with password
 router.post('/upload', binaryupload.single('file'), (req, res) => {
   const {file, msg, otp, id, status } = req.body;
-  const OTP_stored = fs.readFileSync('2fa.txt', 'utf-8');
+  let OTP_stored = ""
+  let response = "";
+
+  try {
+    OTP_stored = fs.readFileSync('2fa.txt', 'utf-8');
+  }
+  catch {
+    // OTP error
+    res.status(401).send("401 OTP not generated")
+  }
   
-  fs.unlink('2fa.txt', (err)=> {});
+  
+  
+  fs.unlink('2fa.txt', (err)=> {response = err});
   
     // check 2fa and user id
     if (id == process.env.SECRET && OTP_stored == otp)
     {
       success = true;
-      response = "Error occured";
+      
       
 
       // If we provided a new file upload it
       if (file != 'undefined')
       {
         // Accept the temp file
-        fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {})
+        fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {response = err})
 
         // Increase the version
         const version_str = fs.readFileSync('version.txt', 'utf-8');
         let version = +version_str
         fs.writeFileSync('version.txt', ++version + '') // Increase the version and write it to file
 
+        response += ' uploaded version '+ version+'\n'
+
       }
 
       // Delete status if cleared
-      if (status == "false")
+      if (status == "true")
       {
         content_db.updateOne({}, { $set: { motd: "" } })
+        response = "MOTD cleared.\n"
       }
 
       // If we provided a new motd change it
-      if (msg)
+      else if (msg)
       {
         content_db.updateOne({}, { $set: { motd: msg } })
         .then((res) => {
+          response += 'Successfully set motd to '+msg
           
         })
         .catch((e) => {
@@ -409,36 +431,16 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         })
       }
 
-      if(success)
-      {
-        response = ""
-        if (file != 'undefined')
-        {
-          response += 'Successfully uploaded version '+ version
-        }
 
-        if (msg)
-        {
-          response += 'Successfully set motd to '+msg
-        }
-        
+      // Status return
+      res.status(success? 200: 500).send(response);
 
-        // Send success message
-        res.status(200).send(response);
-
-      }
-      else{
-        res.status(500).send(response)
-      }
-
-      
-      
     }
 
     else {
     // credentials incorrect, reject the file
     fs.unlink('uploads/temp.bin', (err)=> {});
-    res.status(401).send('Unauthorized');
+    res.status(401).send('401 Unauthorized');
   }
 });
 

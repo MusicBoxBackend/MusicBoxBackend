@@ -7,8 +7,9 @@ const Upload = (props) => {
   const [authed, setAuthed] = useState(false)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [resMsg, setResMsg] = useState("")
   const [fail, setFail] = useState(false)
-  const [updateStatusChecked, setUpdateStatusChecked] = useState(true); // Default value true
+  const [updateStatusChecked, setUpdateStatusChecked] = useState(false); // Default value false: If true, deletes motd status
 
   // Auth user when accessing page
   // Look into why it runs twice
@@ -70,11 +71,17 @@ const Upload = (props) => {
         })
         .then((res) => {
           setSuccess(true)
+          setFail(false)
+          setResMsg(res.data)
+          
+  
 
         })
         .catch((res) => {
-          console.log(res)
           setFail(true)
+          setSuccess(false)
+          setResMsg(res.response.data)
+          
 
         })
 
@@ -89,9 +96,8 @@ const Upload = (props) => {
     textAlign: 'center',
     maxWidth: '400px',
     padding: '10px',
-    border: '1px solid #ddd',
+    border: '1px solid gray',
     borderRadius: '8px',
-    backgroundColor: '#eeeeee',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
     margin: '0 auto', 
   };
@@ -99,12 +105,13 @@ const Upload = (props) => {
   const labelStyle = {
     display: 'block',
     margin: '10px 0',
-    color: '#555',
+    color: 'gray',
   };
 
   const inputStyle = {
     padding: '8px',
     margin: '5px 0 15px',
+    color: 'gray',
     width: '100%',
     boxSizing: 'border-box',
     border: '1px solid #ccc',
@@ -132,41 +139,55 @@ const Upload = (props) => {
   }
   else
   {
-
+    // Update response sent and recieved.
+    if (fail || success)
+    {
+      console.log(fail, success, resMsg)
+      return (
+        <div style = {{
+          display: 'flex', 
+          padding: '10%', 
+          alignItems: 'center',
+          flexDirection: 'column',}}>
   
-    if (success)
-    {
-      return ("succces")
+          <h1 style = {{color: 'rgb(92, 119, 226)'}}>{fail? "Oh no!": "Success!"}</h1>
+          <p style = {{ color: 'gray'}}>{resMsg}</p>
+        </div>
+        )
     }
-    else if (fail)
-    {
-      return ("fail")
-    }
+    
 
     else if (authed)
     {
       return (
         <div>
         <form onSubmit={handleUpload} style={formStyle}>
-          <h1 style={{ color: '#333' }}>Admin Portal</h1>
+          <h1 style={{ color: 'rgb(92, 119, 226)' }}>Admin Portal</h1>
           <label htmlFor="file" style={labelStyle}>
             Upload Binaries:
           </label>
-          <input type="file" name="file" id="file" style={inputStyle} />
+          <input  type="file" name="file" id="file" style={inputStyle} />
           <br />
-          
+        
+
+        
+        <label htmlFor="updateStatus" style={labelStyle}>
+          Status:
+        </label>
+        <input type="text" name="msg" id="msg" style={inputStyle} />
+
+        <label htmlFor="clearStatus" style={{ color: 'gray', marginLeft: '5px' }}>
+            Clear Status:
+          </label>
           <input
           type="checkbox"
-          name="updateStatus"
-          id="updateStatus"
+          name="clearStatus"
+          id="clearStatus"
           defaultChecked={updateStatusChecked}
           style={checkboxStyle}
           onChange={() => setUpdateStatusChecked(!updateStatusChecked)}
         />
-        <label htmlFor="updateStatus" style={{ color: '#555', marginLeft: '5px' }}>
-          Status:
-        </label>
-        <input type="text" name="msg" id="msg" style={inputStyle} />
+
           <br />
           <label htmlFor="otp" style={labelStyle}>
             OTP:

@@ -146,7 +146,7 @@ export default function Link(props) {
                <div style={styles.title}>{state === 'success'? (linked? 'Successfully Linked!': 'Successfully unlinked!'): (linked? 'Error unlinking accounts.': 'Error linking accounts.')}</div>
  
                <div>
-                 <p style={{color: 'gray'}}>{state === 'success'? (linked? 'You can now connect to the setup network and complete the initialization.': ''): (linked? '' : '')}</p>
+                 <p style={{color: 'gray'}}>{state === 'success'? (linked? 'You can now connect to the setup network and complete the initialization.': 'Remember to remove your credentials from your MusicBox if logging out.'): (linked? '' : '')}</p>
                </div>
  
                {state === 'fail' && 

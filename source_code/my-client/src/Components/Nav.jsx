@@ -18,7 +18,7 @@ const Nav = props => {
                 <div class="navbar-container">
                     
                     <ul class="navbar">
-                        <li><NavLink to = "/">Welcome</NavLink></li>
+                        <li><NavLink to = "/">Home</NavLink></li>
                         <li><NavLink to = "/link">Link</NavLink></li>
                         <li><NavLink to = "/contact">Contact</NavLink></li>
                         {isAdmin() && (<li><NavLink to = "/upload">Admin</NavLink></li>)}

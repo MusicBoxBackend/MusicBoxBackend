@@ -31,6 +31,8 @@ const Main = () => {
     return sessionStorage.getItem('username');
   }
 
+  // Set the background globally
+  document.body.style = 'background: #1A1A1A';
 
    
   if (host)
@@ -38,8 +40,7 @@ const Main = () => {
       <>
     
     <BrowserRouter>
-    {/* Global background color */}
-    <div style={{ backgroundColor: '#1A1A1A', height: '100vh' }} >
+    <div >
     <Nav token = {getToken}></Nav>
       <Routes>
           <Route index element={<Welcome token = {getToken} host = {host}/>} />
