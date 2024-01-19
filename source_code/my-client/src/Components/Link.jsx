@@ -53,6 +53,7 @@ export default function Link(props) {
       }
       else
       {
+        localStorage.setItem('isLinked', JSON.stringify(true));
 
         // Authorize
         window.location.href = authUrl;
@@ -140,7 +141,7 @@ export default function Link(props) {
     if (!props.token())
     {
         return <div style = {{paddingLeft: '20%', paddingRight: '20%'}}>
-          <Login msg = "Please login with MusicBox first" redir = "/link/musicbox" setToken = {props.setToken} token = {props.token} host = {host}/>
+          <Login msg = "Please login with MusicBox first" redir = "/link" setToken = {props.setToken} token = {props.token} host = {host}/>
         </div>
     }
 
@@ -163,9 +164,6 @@ export default function Link(props) {
      // Check if we just authorized and were redirected here
      if (state)
      {
-      // If we redirected with success, set linked to success. Likewise for fail
-      localStorage.setItem('isLinked', JSON.stringify(state === 'success'));
-
       // Return a visual to indicate the status of the authorization
          return (
          <div style={styles.container}>
