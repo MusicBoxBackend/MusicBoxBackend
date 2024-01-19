@@ -537,8 +537,8 @@ function updateAccount(req, res)
     }
     else
     {
-
-      User.findOneAndUpdate({'username': req.body.oldUsername}, {'username': req.body.username, 'password': hashedPassword})
+      User.findByIdAndUpdate(req.body.id, {'username': req.body.username, 'password': hashedPassword})
+      //User.findOneAndUpdate({'_id': req.body.oldUsername}, {'username': req.body.username, 'password': hashedPassword})
       .then(function(value) 
       {
         // THIS IS THE RESPONSE THE CLIENT WILL GET!

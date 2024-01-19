@@ -1,15 +1,10 @@
-# Peter Buonaiuto 518 lab showcase
-This website has a landing page as well as a page for each lab.
-
-My deployed instance elastic address is: 
-http://3.225.12.137
-
-And my github classroom repo is:
-https://github.com/ualbany-software-engineering/frontend-assignment-peterb2396.git
+# MusicBox website
+This website hosts information as well as firmware for the MusicBox product.
 
 ## Docker Deployment:
     * sudo apt update
     * sudo git clone <>
+    * sudo nano .env on the server!
     * cd into source code (where compose and caddyfile are)
 
     * sudo curl -fsSL https://get.docker.com -o get-docker.sh

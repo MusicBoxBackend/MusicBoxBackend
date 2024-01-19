@@ -14,11 +14,10 @@ const Account = (props) =>
     {
         let newPassword = document.getElementById("passwordInput").value
         let newUsername = document.getElementById("usernameInput").value
-        let oldUsername = props.token()
         
         props.setToken(newUsername, null)
 
-        let data = {'username': newUsername, 'password': newPassword, 'oldUsername': oldUsername}
+        let data = {'username': newUsername, 'password': newPassword, 'id': sessionStorage.getItem('id')}
 
         axios.post(`${host}/update-account`, data)
 
