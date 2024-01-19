@@ -6,6 +6,8 @@ const Account = (props) =>
 {
     const host = props.host
     const [username, setUsername] = useState(props.token())
+    const [done, setDone] = useState(false);
+    const [fail, setFail] = useState(false);
 
     const navigate = useNavigate();
   
@@ -14,21 +16,29 @@ const Account = (props) =>
     {
         let newPassword = document.getElementById("passwordInput").value
         let newUsername = document.getElementById("usernameInput").value
+        let oldUsername = props.token()
         
         props.setToken(newUsername, null)
 
-        let data = {'username': newUsername, 'password': newPassword, 'id': sessionStorage.getItem('id')}
+        let data = {'username': newUsername, 'password': newPassword, 'oldUsername': oldUsername, 'id': localStorage.getItem('id')}
 
         axios.post(`${host}/update-account`, data)
+        .then((res)=> {
 
-        navigate('/account'); // re render
+        })
+        .catch((res) => {
+            setFail(true)
+
+        })
+
+        setDone(true)
          
     }
 
     //logout of this account
     function logout()
     {
-        sessionStorage.clear()
+        localStorage.clear()
         navigate('/')
         window.location.reload()
     }
@@ -44,7 +54,6 @@ const Account = (props) =>
 
         if (valid) // entries are syntactically good...
         {
-            console.log('hey')
             let data = {'username': username}
             let myname = props.token()
             // we need to check the database for this username
@@ -55,7 +64,6 @@ const Account = (props) =>
                 {
                     document.getElementById('login-btn').disabled = false;
                     document.getElementById("errorMsg").style.display = "none"
-                    console.log(username)
                 }
                 else
                 {
@@ -97,6 +105,40 @@ const Account = (props) =>
       };
 
 
+    // Response display
+    if (done)
+  {
+    if (fail)
+    {
+      return (
+        <div style = {{
+          display: 'flex', 
+          padding: '20%', 
+          alignItems: 'center',
+          flexDirection: 'column',}}>
+  
+          <h1 style = {{color: 'rgb(92, 119, 226)'}}>Oh no!</h1>
+          <p style = {{ color: 'gray'}}>There was an error updating your account.</p>
+        </div>
+        )
+    }
+    else
+    {
+      // Success
+      return (
+      <div style = {{
+        display: 'flex', 
+        padding: '20%', 
+        alignItems: 'center',
+        flexDirection: 'column',}}>
+
+        <h1 style = {{color: 'rgb(92, 119, 226)'}}>Success!</h1>
+        <p style = {{ color: 'gray'}}>Your account details have been updated.</p>
+      </div>
+      )
+    }
+  }
+
 
     return(
 
@@ -124,7 +166,7 @@ const Account = (props) =>
                     <p id = "errorMsg">Error msg</p>
 
                     <div style = {{margin:'5px', display:'flex', justifyContent:'space-between', paddingTop: '20px'}}>
-                        <button type="button" className="btn btn-outline-secondary" id = "logout" onClick = {logout} disabled = {sessionStorage.getItem('id') == null}>Logout</button>
+                        <button type="button" className="btn btn-outline-secondary" id = "logout" onClick = {logout} disabled = {localStorage.getItem('id') == null}>Logout</button>
                         <button style = {{marginRight:'-10px'}}type="button" className="btn btn-outline-primary" id = "login-btn" onClick = {updateAccount}>Update</button>
 
                         

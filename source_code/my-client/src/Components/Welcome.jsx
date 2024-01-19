@@ -18,12 +18,22 @@ const Welcome = (props) => {
 
     useEffect(() => {
       if (!loaded) {
+        // See if we have the info in session cookies
+        let content = JSON.parse(sessionStorage.getItem('content'));
+
+        // If the value has not been set, fetch it and store it
+        if (content === null || content === undefined) {
           axios.get(`${props.host}/getMotd`)
               .then((res) => {
                   setLoaded(true);
-                  let content = res.data;
+                  content = res.data;
+
+                  // Store the content in localStorage
+                  sessionStorage.setItem('content', JSON.stringify(content))
+
+                  // Store the content in state
                   
-                  // Set the motd
+                  // Set motd
                   setMotd(content['motd']);
 
                   // Set info boxes
@@ -38,10 +48,38 @@ const Welcome = (props) => {
 
                   // Set the buy link
                   setBuyLink(content['buy_link'])
+                  
+
               })
               .catch((e) => {
                   console.log(e);
+                  return;
               });
+        } // End fetch when not set
+
+        else // I already had the content stored locally! So set the state
+        {
+          // Set motd
+          setMotd(content['motd']);
+
+          // Set info boxes
+          setInfo1Body(content['info_1'].substring(content['info_1'].indexOf("|") + 1, content['info_1'].length));
+          setInfo1Title(content['info_1'].substring(0, content['info_1'].indexOf("|")));
+
+          setInfo2Body(content['info_2'].substring(content['info_2'].indexOf("|") + 1, content['info_2'].length));
+          setInfo2Title(content['info_2'].substring(0, content['info_2'].indexOf("|")));
+
+          setInfo3Body(content['info_3'].substring(content['info_3'].indexOf("|") + 1, content['info_3'].length));
+          setInfo3Title(content['info_3'].substring(0, content['info_3'].indexOf("|")));
+
+          // Set the buy link
+          setBuyLink(content['buy_link'])
+
+          setLoaded(true);
+        }
+        
+
+        
       }
   }, [loaded, props.host]);
     

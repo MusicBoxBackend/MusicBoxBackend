@@ -26,19 +26,23 @@ export default function Link(props) {
     const redirectUri = `${host}/auth-callback`;
     
     const originalPageUrl = window.location.href.substring(0, (window.location.href.indexOf('?') === -1)? window.location.href.length: window.location.href.indexOf('?'))
-    const statestr = encodeURIComponent(originalPageUrl) + "uid" + sessionStorage.getItem('id')
+    const statestr = encodeURIComponent(originalPageUrl) + "uid" + localStorage.getItem('id')
     const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=user-read-currently-playing playlist-modify-public app-remote-control user-modify-playback-state&state=${statestr}`; 
         
     
     // Link or unlink
     function authenticate()
     {
+      // Unlink
       if (linked)
       {
-        axios.post(`${host}/unlink`, {id: sessionStorage.getItem('id')})
+        axios.post(`${host}/unlink`, {id: localStorage.getItem('id')})
         .then((res) => {
-           // redirect to success
-           window.location.href = window.location.href.substring(0, (window.location.href.indexOf('?') === -1)? window.location.href.length: window.location.href.indexOf('?')) + '?state=success'
+          // Store unlink in cookies
+          localStorage.setItem('isLinked', JSON.stringify(false));
+
+          // redirect to success
+          window.location.href = window.location.href.substring(0, (window.location.href.indexOf('?') === -1)? window.location.href.length: window.location.href.indexOf('?')) + '?state=success'
 
         })
         .catch((e) => {
@@ -49,7 +53,10 @@ export default function Link(props) {
       }
       else
       {
+
+        // Authorize
         window.location.href = authUrl;
+
       }
         
 
@@ -59,16 +66,35 @@ export default function Link(props) {
     if (init)
     {
       setInit(false)
-      axios.post(`${host}/isLinked`, {id: sessionStorage.getItem('id')})
-      .then((res) => {
-        setLinked(res.data)
-        setLoading(false)
+      // Did we already check if linked?
+      let linked = JSON.parse(localStorage.getItem('isLinked'));
 
-      })
-      .catch((e) => {
+      // Has the value been set yet?
+      if (linked === null || linked === undefined) {
+        // Value hasnt been set, set it 
+        axios.post(`${host}/isLinked`, {id: localStorage.getItem('id')})
+        .then((res) => {
+          setLinked(res.data)
+          setLoading(false)
+
+          // Set it in local storage
+          localStorage.setItem('isLinked', JSON.stringify(res.data));
+
+        })
+        .catch((e) => {
+          setLoading(false)
+          console.log(e)
+        })
+
+      } else {
+        // Parse the retrieved value (assuming it's a JSON string)
+        var parsedValue = JSON.parse(linked);
         setLoading(false)
-        console.log(e)
-      })
+        
+        // Store it on the react state
+        setLinked(parsedValue)
+      }
+      
     }
 
     // Style
@@ -137,6 +163,10 @@ export default function Link(props) {
      // Check if we just authorized and were redirected here
      if (state)
      {
+      // If we redirected with success, set linked to success. Likewise for fail
+      localStorage.setItem('isLinked', JSON.stringify(state === 'success'));
+
+      // Return a visual to indicate the status of the authorization
          return (
          <div style={styles.container}>
            <div style={styles.gradientBackground}>

@@ -43,7 +43,7 @@ export default function Login(props) {
             {
                 error("success!")
                 props.setToken(response.data.username, response.data.id)
-                sessionStorage.setItem('admin', response.data.admin);
+                localStorage.setItem('admin', response.data.admin);
                 if (redir)
                 {
                     window.location.reload()

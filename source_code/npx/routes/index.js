@@ -537,13 +537,23 @@ function updateAccount(req, res)
     }
     else
     {
-      User.findByIdAndUpdate(req.body.id, {'username': req.body.username, 'password': hashedPassword})
-      //User.findOneAndUpdate({'_id': req.body.oldUsername}, {'username': req.body.username, 'password': hashedPassword})
+      User.findOneAndUpdate({'username': req.body.oldUsername, '_id': req.body.id}, {'username': req.body.username, 'password': hashedPassword})
       .then(function(value) 
       {
-        // THIS IS THE RESPONSE THE CLIENT WILL GET!
-        res.json({ id: value?._id}) 
+        if (value)
+        {
+          // THIS IS THE RESPONSE THE CLIENT WILL GET!
+          res.json({ id: value._id}) 
+        }
+        else
+        {
+          res.status(400).send("Bad request")
+        }
       })
+      .catch(function(err) {
+        console.error("Error during findOneAndUpdate:", err);
+        // Handle the error appropriately
+      });
 
     }})
   

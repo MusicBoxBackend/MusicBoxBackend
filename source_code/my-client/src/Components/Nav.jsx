@@ -5,7 +5,7 @@ const Nav = props => {
 
     function isAdmin()
     {
-        if (sessionStorage.getItem('admin') === 'true')
+        if (localStorage.getItem('admin') === 'true')
             return true
         return false
     }

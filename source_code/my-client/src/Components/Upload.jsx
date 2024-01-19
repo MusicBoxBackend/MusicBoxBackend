@@ -16,7 +16,7 @@ const Upload = (props) => {
   useEffect(() => {
     if (loading)
     {
-      axios.post(`${props.host}/authAdmin`, {id: sessionStorage.getItem('id')})
+      axios.post(`${props.host}/authAdmin`, {id: localStorage.getItem('id')})
       .then((res) => {
         // Success
         setAuthed(true)
@@ -38,7 +38,7 @@ const Upload = (props) => {
 
   const sendOTP = () => {
     // When accessed, send otp (if its my id)
-    axios.post(`${props.host}/sendOTP`, {id: sessionStorage.getItem('id')})
+    axios.post(`${props.host}/sendOTP`, {id: localStorage.getItem('id')})
     
   }
 
@@ -61,7 +61,7 @@ const Upload = (props) => {
         formData.append('file', file); // What did they upload
         formData.append('msg', msg); // What did they upload
         formData.append('otp', otp); // What did they upload
-        formData.append('id', sessionStorage.getItem('id')) // Who uploaded
+        formData.append('id', localStorage.getItem('id')) // Who uploaded
         formData.append('status', status); // What did they upload
 
         await axios.post(`${props.host}/upload`, formData, {

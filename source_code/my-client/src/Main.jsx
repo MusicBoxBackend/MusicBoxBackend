@@ -22,13 +22,17 @@ const Main = () => {
   // store username and id locally.. username for display, id for auth
   function setToken(username, id) {
     // Store the username as a token to display and allow logged-in-features
-    sessionStorage.setItem('username', username);
-    sessionStorage.setItem('id', id);
+    localStorage.setItem('username', username);
+    if (id)
+    {
+      localStorage.setItem('id', id);
+    }
+    
   }
   
   // Get token: Returns the username token (not the id)
   function getToken() {
-    return sessionStorage.getItem('username');
+    return localStorage.getItem('username');
   }
 
   // Set the background globally
@@ -49,7 +53,7 @@ const Main = () => {
           <Route path="account" element={<Account setToken = {setToken} token = {getToken} host = {host}/>} />
           <Route path="contact" element={<ContactForm host = {host}/>} />
           <Route path="link" element={<Link host = {host} token = {getToken} setToken = {setToken}/>} />
-          <Route path = "upload" element = {(sessionStorage.getItem('admin') === "false")? (<Welcome token = {getToken} host = {host}/>): <Upload host = {host}/>}/>
+          <Route path = "upload" element = {(localStorage.getItem('admin') === "false")? (<Welcome token = {getToken} host = {host}/>): <Upload host = {host}/>}/>
       </Routes>
       </div>
     </BrowserRouter>
