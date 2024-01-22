@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 const Welcome = (props) => {
 
     const [buyLink, setBuyLink] = useState("")
+    const [videoLink, setVideoLink] = useState("")
+
     const [motd, setMotd] = useState("");
     const [loaded, setLoaded] = useState(false)
     const [info1body, setInfo1Body] = useState("");
@@ -48,6 +50,9 @@ const Welcome = (props) => {
 
                   // Set the buy link
                   setBuyLink(content['buy_link'])
+
+                  // Set the video link
+                  setVideoLink(content['video_link'])
                   
 
               })
@@ -165,7 +170,8 @@ const Welcome = (props) => {
             </div>
           </div>
 
-        <div style = {{display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
+        <div style = {{justifyContent: 'center', display: 'flex'}}>
+          <button style = {{color: 'white', width: "120px", height: "40px", padding: 0, margin: '10px'}} type="button" className="oval-button" onClick = {() => {window.open(videoLink, '_blank')}}>Watch Demo</button>
           <button style = {{color: 'white', width: "120px", height: "40px", padding: 0, margin: '10px'}} type="button" className="oval-button" onClick = {() => {window.open(buyLink, '_blank')}}>Buy now!</button>
         </div>
 
