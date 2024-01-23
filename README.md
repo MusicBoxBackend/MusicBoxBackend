@@ -17,6 +17,15 @@ This website hosts information as well as firmware for the MusicBox product.
     <service the file> ex reset images * sudo rm -rf images/*
     * sudo docker compose up
 
+### Modify via file replacement
+    * sudo rm -rf <file>
+    * sudo nano <file>
+    * CTRL+O, CTRL+X
+    * pm2 restart <app.file>
+
+    NOTE can auto restart on file changes; 
+    * pm2 start app.js --watch
+
 	
 
 ## Standard ec2 Deployment:

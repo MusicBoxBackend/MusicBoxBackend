@@ -529,33 +529,92 @@ router.post('/update-account', updateAccount);
 
 // Update this account username and password
 function updateAccount(req, res)
-{
-  bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-    if (err) {
-      res.status(500)
-      res.json("Could not hash password")
-    }
-    else
+{ // Authorize the user
+  User.findOne({_id: req.body.id})
+  .then(async (user) => {
+    // Check the password against the hashed
+    const authed = await bcrypt.compare(req.body.password, user.password);
+    if (authed)
     {
-      User.findOneAndUpdate({'username': req.body.oldUsername, '_id': req.body.id}, {'username': req.body.username, 'password': hashedPassword})
-      .then(function(value) 
+      // Correct password
+
+      // Check if we want to change to a new password (non empty new password fields)
+      if (req.body.newpass1.length * req.body.newpass2.length)
       {
-        if (value)
+        // Check if theyre the same
+        if (req.body.newpass1 === req.body.newpass2)
         {
-          // THIS IS THE RESPONSE THE CLIENT WILL GET!
-          res.json({ id: value._id}) 
+          // Hash the new password
+          bcrypt.hash(req.body.newpass1, 10, (err, hashedPassword) => {
+            if (err) {
+
+              // Error hashing password
+              res.status(500).send("Could not hash password")
+            }
+            else // Password hash succeeded
+            {
+
+              // Apply the password change
+              User.findOneAndUpdate({'_id': req.body.id}, {'password': hashedPassword})
+              .then(function(value) 
+              {
+                if (!value)
+                {
+                  console.log("Penis 2")
+                  res.status(400).send("Bad request")
+                }
+              })
+              .catch(function(err) {
+                console.error("Error during findOneAndUpdate:", err);
+                res.status(500).send("Server error: " + err)
+              });
+
+
+            }
+          })
+          
+
         }
         else
         {
-          res.status(400).send("Bad request")
+          // Passwords do not match
+          res.status(400).send("Passwords do not match")
         }
-      })
-      .catch(function(err) {
-        console.error("Error during findOneAndUpdate:", err);
-        // Handle the error appropriately
-      });
+      }
 
-    }})
+      // Check if we wanna change the username
+      if (req.body.username && (req.body.username !== req.body.oldUsername))
+      {
+        
+        // Apply the name change
+        User.findOneAndUpdate({'_id': req.body.id}, {'username': req.body.username})
+        .then(function(value) 
+        {
+          if (!value)
+          {
+            console.log("Penis 1")
+            res.status(400).send("Bad request")
+          }
+        })
+        .catch(function(err) {
+          console.error("Error during findOneAndUpdate:", err);
+          res.status(500).send("Server error: " + err)
+        });
+      }
+    }
+    else{
+      // Incorrect password
+      res.status(401).send("Incorrect Password")
+
+    }
+  })
+  .catch((e) => {
+    res.status(500).send("Server error: "+e)
+
+  })
+      
+
+    
   
 }
 

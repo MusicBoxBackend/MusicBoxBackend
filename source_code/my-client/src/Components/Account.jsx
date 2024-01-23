@@ -8,25 +8,30 @@ const Account = (props) =>
     const [username, setUsername] = useState(props.token())
     const [done, setDone] = useState(false);
     const [fail, setFail] = useState(false);
+    const [errmsg, setErrmsg] = useState('')
 
     const navigate = useNavigate();
   
     //update DB and user token on session storage
     function updateAccount()
     {
-        let newPassword = document.getElementById("passwordInput").value
+        let password = document.getElementById("passwordInput").value
+        let newpass1 = document.getElementById("newpass1Input").value
+        let newpass2 = document.getElementById("newpass2Input").value
         let newUsername = document.getElementById("usernameInput").value
         let oldUsername = props.token()
         
         props.setToken(newUsername, null)
 
-        let data = {'username': newUsername, 'password': newPassword, 'oldUsername': oldUsername, 'id': localStorage.getItem('id')}
+        let data = {'newpass1': newpass1, 'newpass2': newpass2, 'username': newUsername, 'password': password, 'oldUsername': oldUsername, 'id': localStorage.getItem('id')}
 
         axios.post(`${host}/update-account`, data)
         .then((res)=> {
+            // Success
 
         })
         .catch((res) => {
+            setErrmsg(res.response.data)
             setFail(true)
 
         })
@@ -46,11 +51,21 @@ const Account = (props) =>
     function validateData()
 
     {
+
+        let newUsername = document.getElementById("usernameInput").value
+        let oldUsername = props.token()
         
         let valid = true
         // return false if no password is present
         if (! document.getElementById("passwordInput").value || ! username)
             valid = false
+
+        // return false if new passwords to not match
+        if (document.getElementById("newpass1Input").value !== document.getElementById("newpass2Input").value)
+            valid = false
+        if (newUsername === oldUsername)
+            valid = false
+        
 
         if (valid) // entries are syntactically good...
         {
@@ -68,7 +83,7 @@ const Account = (props) =>
                 else
                 {
                     document.getElementById('login-btn').disabled = true;
-                    error("username taken!")
+                    error("Username taken!")
                 }
 
                 
@@ -118,7 +133,7 @@ const Account = (props) =>
           flexDirection: 'column',}}>
   
           <h1 style = {{color: 'rgb(92, 119, 226)'}}>Oh no!</h1>
-          <p style = {{ color: 'gray'}}>There was an error updating your account.</p>
+          <p style = {{ color: 'gray'}}>{errmsg}</p>
         </div>
         )
     }
@@ -160,6 +175,20 @@ const Account = (props) =>
                         <label style = {{marginLeft:'5px', color: 'gray'}}>Password</label>
                         <img src="eye.png" id="eye" alt="O" width="23px" onMouseOver={mouseoverPass} onMouseOut={mouseoutPass} />
                         <input style = {{margin:'5px'}} type="password" className="form-control" onInput={validateData} id="passwordInput" placeholder="Enter password"></input>
+                        
+                    </div>
+
+                    <div className="form-group">
+                        <label style = {{marginLeft:'5px', color: 'gray'}}>New Password</label>
+                        <img src="eye.png" id="eye" alt="O" width="23px" onMouseOver={mouseoverPass} onMouseOut={mouseoutPass} />
+                        <input style = {{margin:'5px'}} type="password" className="form-control" onInput={validateData} id="newpass1Input" placeholder="Enter password"></input>
+                        
+                    </div>
+
+                    <div className="form-group">
+                        <label style = {{marginLeft:'5px', color: 'gray'}}>Confirm New Password</label>
+                        <img src="eye.png" id="eye" alt="O" width="23px" onMouseOver={mouseoverPass} onMouseOut={mouseoutPass} />
+                        <input style = {{margin:'5px'}} type="password" className="form-control" onInput={validateData} id="newpass2Input" placeholder="Enter password"></input>
                         
                     </div>
 
