@@ -48,6 +48,11 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+// Ensure alive
+router.get('/ping', async(req, res) => {
+  res.json(Date.now())
+})
+
 
 
 var mongoose = require('mongoose');
