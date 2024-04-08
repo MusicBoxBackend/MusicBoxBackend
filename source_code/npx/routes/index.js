@@ -7,6 +7,7 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const axios = require('axios')
+const cron = require('node-cron');
 
 //Backend routes (endpoints)
 const host = process.env.BASE_URL
@@ -22,6 +23,25 @@ function getDate()
 
   return mm + '/' + dd + '/' + yyyy;
 }
+
+let latest;
+  
+const urlToPing = `https://mealgenius-bes7.onrender.com/ping`;
+ 
+const pingUrl = () => {
+  axios.get(urlToPing)
+    .then((res) => {
+      latest = res.data
+      
+    })
+    .catch((error) => {
+      setTimeout(pingUrl, 2000); // Retry after 2 seconds
+    });
+};
+
+cron.schedule('*/10 * * * *', pingUrl);
+pingUrl();
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {

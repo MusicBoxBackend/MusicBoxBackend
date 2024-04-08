@@ -16,7 +16,7 @@ import Link from './Components/Link.jsx'
 
 
 const Main = () => {
-  const host = "https://musicbox.onrender.com/"
+  const host = "https://musicbox-backend-gu22.onrender.com"
   
 
   // store username and id locally.. username for display, id for auth
