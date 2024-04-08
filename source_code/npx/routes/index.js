@@ -26,7 +26,7 @@ function getDate()
 
 let latest;
   
-const urlToPing = `https://mealgenius-bes7.onrender.com/ping`;
+const urlToPing = process.env.PING_URL;
  
 const pingUrl = () => {
   axios.get(urlToPing)
