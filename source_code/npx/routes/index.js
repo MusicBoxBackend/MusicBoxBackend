@@ -193,21 +193,34 @@ router.post('/isLinked', async(req, res) => {
 router.get('/certificate', (req, res) => {
   // Make a GET request to the website
   const reqHttps = https.get("https://musicbox-backend-178z.onrender.com/", (response) => {
-      // Extract the certificate from the response
-      const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
+    // Extract the certificate from the response
+    const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
 
-      let pem = "-----BEGIN CERTIFICATE-----\n"
+    if (certificate) {
+        // Convert certificate to PEM format
+        const cert = certificate.raw.toString('base64');
+        let pem = "-----BEGIN CERTIFICATE-----\n";
+        
+        for (let i = 0; i < cert.length; i += 64) {
+            pem += cert.slice(i, i + 64) + '\n';
+        }
+        pem += "-----END CERTIFICATE-----\n";
 
-      const cert = certificate.raw.toString('base64')
-
-      for (let i = 0; i < cert.length; i += 64) {
-          pem += cert.slice(i, i + 64) + '\n';
-      }
-      pem += "-----END CERTIFICATE-----\n"
-
-      res.set('Content-Type', 'text/plain');
-      res.send(pem);
-  });
+        // Write PEM string to cert.txt, overriding if it exists, creating it if it doesn't
+        fs.writeFileSync('cert.txt', pem);
+        
+        // Send PEM string as response
+        res.set('Content-Type', 'text/plain');
+        res.send(pem);
+    } else {
+        // If certificate is not valid, load the contents of cert.txt to PEM string
+        const pem = fs.readFileSync('cert.txt', 'utf8');
+        
+        // Send PEM string from file as response
+        res.set('Content-Type', 'text/plain');
+        res.send(pem);
+    }
+});
 
   reqHttps.on('error', (err) => {
       console.error(`Error: ${err.message}`);
