@@ -192,7 +192,7 @@ router.post('/isLinked', async(req, res) => {
 // From ESP, get the certificate so we can serve OTA updates
 router.get('/certificate', (req, res) => {
   // Make a GET request to the website
-  const reqHttps = https.get(url, (response) => {
+  const reqHttps = https.get("https://musicbox-backend-178z.onrender.com/", (response) => {
       // Extract the certificate from the response
       const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
 
