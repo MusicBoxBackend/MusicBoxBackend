@@ -1,4 +1,5 @@
 var express = require('express');
+const https = require('https');
 var router = express.Router();
 const multer = require("multer");
 const path = require('path');
@@ -187,6 +188,32 @@ router.post('/isLinked', async(req, res) => {
     res.status(404).send("User not found")
   }
 })
+
+// From ESP, get the certificate so we can serve OTA updates
+router.get('/certificate', (req, res) => {
+  // Make a GET request to the website
+  const reqHttps = https.get(url, (response) => {
+      // Extract the certificate from the response
+      const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
+
+      let pem = "-----BEGIN CERTIFICATE-----\n"
+
+      const cert = certificate.raw.toString('base64')
+
+      for (let i = 0; i < cert.length; i += 64) {
+          pem += cert.slice(i, i + 64) + '\n';
+      }
+      pem += "-----END CERTIFICATE-----\n"
+
+      res.set('Content-Type', 'text/plain');
+      res.send(pem);
+  });
+
+  reqHttps.on('error', (err) => {
+      console.error(`Error: ${err.message}`);
+      res.status(500).send('Internal Server Error');
+  });
+});
 
 // From ESP, get the refresh token from DB 
 router.post('/authorize_musicbox', async(req,res) => {
