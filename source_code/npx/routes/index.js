@@ -340,6 +340,7 @@ router.get('/findProject/:id', (req, res) => {
 
 // Get data to display on webpage
 router.get('/getMotd', (req, res) => {
+  
 
   // Query the database to find relevant items
   content_db.find({}).toArray()
@@ -360,8 +361,19 @@ router.get('/getMotd', (req, res) => {
 
 // Read the current version
 router.get('/version', (req,res) => {
-  const version_str = fs.readFileSync('version.txt', 'utf-8');
-  res.send(version_str)
+
+  // Using FS ... * deprecated because FS was not persistant on Render
+
+  //const version_str = fs.readFileSync('version.txt', 'utf-8');
+  //res.send(version_str)
+
+
+  // Using DB (currently more reliable for persistance)
+
+  content_db.find({}).toArray()
+  .then(data => {
+    res.send(String(data[0].version)) // Res must send a string or object
+  })
   
 })
 
@@ -463,15 +475,35 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
       // If we provided a new file upload it
       if (file != 'undefined')
       {
+
         // Accept the temp file
         fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {response = err})
 
         // Increase the version
-        const version_str = fs.readFileSync('version.txt', 'utf-8');
-        let version = +version_str
-        fs.writeFileSync('version.txt', ++version + '') // Increase the version and write it to file
+        // The below method does so via FS - this is not the implemented use case because it isn't persistant
+        // Instead, we use the below DB method
 
-        response += ' uploaded version '+ version+'\n'
+        //const version_str = fs.readFileSync('version.txt', 'utf-8');
+        //let version = +version_str
+
+        //fs.writeFileSync('version.txt', ++version + '') // Increase the version and write it to file
+
+        // Use database, since FS may not persist depending on deployment ...
+
+        content_db.findOneAndUpdate(
+        {},
+        { $inc: { version: 1 } },
+        { new: true }, // Return the updated document
+        (err, updatedDoc) => {
+          if (err) {
+            console.error('Error updating version:', err);
+          } else {
+            console.log('Uploaded version', updatedDoc.version);
+            // Use the updated version here
+            response += `uploaded version ${updatedDoc.version}\n`;
+          }
+        }
+      );
 
       }
 
