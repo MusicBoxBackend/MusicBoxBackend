@@ -489,20 +489,16 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         }
 
         dbx.filesUpload({
-          path: '/temp.bin', // Ensure the path starts with '/'
+          path: '/temp.bin',
           contents: contents,
         })
-          .then((response) => {
-            console.log('File uploaded successfully:', response);
-            res.status(200).send({ url: response.result.path_display });
+          .then((response1) => {
+            console.log('File uploaded successfully:', response1);
 
             // Delete the file from the local filesystem
             fs.unlink(filePath, (err) => {
               if (err) console.error('Error deleting local file:', err);
             });
-
-            // Accept the temp file
-            fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err) => { response = err });
 
             // Increase the version using the database
             content_db.findOneAndUpdate(
@@ -513,6 +509,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
                 if (err) {
                   console.error('Error updating version:', err);
                 } else {
+                  console.log(updatedDoc)
                   console.log('Uploaded version', updatedDoc.version);
                   response += `uploaded version ${updatedDoc.version}\n`;
                 }
@@ -547,6 +544,9 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
             return res.status(500).send('Error uploading to Dropbox');
           });
       });
+
+      res.status(200).send(response);
+
     } else {
       // No file provided, only update version and motd/status
       // Increase the version using the database
@@ -559,7 +559,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
             console.error('Error updating version:', err);
             return res.status(500).send('Error updating version');
           } else {
-            console.log(updatedDoc)
+            
             console.log('Uploaded version', updatedDoc.version);
             response += `uploaded version ${updatedDoc.version}\n`;
 
