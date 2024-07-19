@@ -10,7 +10,12 @@ require('dotenv').config();
 const axios = require('axios')
 const cron = require('node-cron');
 const { Dropbox } = require('dropbox');
-const fetch = require('node-fetch'); // Required by the Dropbox SDK
+
+let fetch; // Placeholder for fetch
+
+(async () => {
+  fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
+})();
 
 //Backend routes (endpoints)
 const host = process.env.BASE_URL
