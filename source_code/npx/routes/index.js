@@ -9,6 +9,8 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const axios = require('axios')
 const cron = require('node-cron');
+const { Dropbox } = require('dropbox');
+const fetch = require('node-fetch'); // Required by the Dropbox SDK
 
 //Backend routes (endpoints)
 const host = process.env.BASE_URL
@@ -445,6 +447,11 @@ function generateRandomPassword(length) {
   return password;
 }
 
+const dbx = new Dropbox({
+  accessToken: process.env.DROPBOX_ACCESS_TOKEN,
+  fetch: fetch,
+});
+
 
 
 // Handle file upload with password
@@ -470,11 +477,42 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
     {
       success = true;
       
-      
+      const filePath = 'uploads/temp.bin'
 
       // If we provided a new file upload it
       if (file != 'undefined')
       {
+        fs.readFile(filePath, (err, contents) => {
+          if (err) {
+            console.error('Error reading file:', err);
+            res.status(500).send('Error reading file');
+            return;
+          }
+      
+          dbx.filesUpload({
+            path: `/${file.filename}`, 
+            contents: contents,
+          })
+          .then((response) => {
+            console.log('File uploaded successfully:', response);
+            res.status(200).send({ url: response.path_display });
+      
+            // delete the file from the local filesystem
+            fs.unlink(filePath, (err) => {
+              if (err) console.error('Error deleting local file:', err);
+            });
+          })
+          .catch((error) => {
+            console.error('Error uploading to Dropbox:', error);
+            res.status(500).send('Error uploading to Dropbox');
+          });
+        });
+
+
+
+
+
+
 
         // Accept the temp file
         fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {response = err})
