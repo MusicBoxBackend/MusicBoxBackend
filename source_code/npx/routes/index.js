@@ -482,7 +482,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
     {
       success = true;
       
-      const filePath = '/uploads/temp.bin'
+      const filePath = path.join(__dirname, '../uploads/temp.bin');
 
       // If we provided a new file upload it
       if (file != 'undefined')
