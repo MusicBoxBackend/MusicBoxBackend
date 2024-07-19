@@ -198,8 +198,14 @@ router.post('/isLinked', async(req, res) => {
 
 // From ESP, get the certificate so we can serve OTA updates
 router.get('/certificate', (req, res) => {
+  // Where are our downloads hosted?
+  //let src = "https://musicbox-backend-178z.onrender.com/"
+  let src = "https://www.dropbox.com/"
+
+
+
   // Make a GET request to the website
-  const reqHttps = https.get("https://musicbox-backend-178z.onrender.com/", (response) => {
+  const reqHttps = https.get(src, (response) => {
     // Extract the certificate from the response
     const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
 
@@ -365,9 +371,35 @@ router.get('/getMotd', (req, res) => {
 
 })
 
+const createSharedLink = async (filePath) => {
+  const url = 'https://api.dropboxapi.com/2/sharing/create_shared_link';
+
+  const headers = {
+    'Authorization': `Bearer ${process.env.DROPBOX_ACCESS_TOKEN}`,
+    'Content-Type': 'application/json',
+  };
+
+  const data = {
+    path: filePath
+  };
+
+  try {
+    const response = await axios.post(url, data, { headers });
+
+    // Extract the URL from the response
+    const sharedLink = response.data.url;
+    // Modify the link to ensure it's a direct download link
+    const directDownloadLink = sharedLink.replace('dl=0', 'dl=1');
+
+    return directDownloadLink
+  } catch (error) {
+    console.error('Error creating shared link:', error.response ? error.response.data : error.message);
+  }
+};
+
 
 // Read the current version
-router.get('/version', (req,res) => {
+router.get('/version', async (req,res) => {
 
   // Using FS ... * deprecated because FS was not persistant on Render
 
@@ -377,10 +409,15 @@ router.get('/version', (req,res) => {
 
   // Using DB (currently more reliable for persistance)
 
-  content_db.find({}).toArray()
-  .then(data => {
-    res.send(String(data[0].version)) // Res must send a string or object
-  })
+  // Get the download link for the latest version
+  const link = await createSharedLink("/latest.bin");
+
+
+    content_db.find({}).toArray()
+    .then(data => {
+      const v = String(data[0].version)
+      res.send({'version': v, 'link': link}) // Res must send a string or object
+    })
   
 })
 
@@ -398,7 +435,7 @@ router.post('/sendOTP', (req, res) => {
       from: process.env.MAILER_USER,
       to: process.env.MAILER_DEST,
       subject: 'MUSICBOX Binary Upload',
-      text: `${code}`,
+      text: `Code: ${code}`,
   };
 
   // Send the email
@@ -509,7 +546,6 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
                 if (err) {
                   console.error('Error updating version:', err);
                 } else {
-                  console.log(updatedDoc)
                   console.log('Uploaded version', updatedDoc.value.version);
                   response += `uploaded version ${updatedDoc.value.version}\n`;
                 }
@@ -587,12 +623,14 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
                   res.status(500).send(response); // Send error response
                 });
             } else {
-              res.status(200).send(response); // Send response here if no motd provided
+              
             }
           }
         }
       );
     }
+    res.status(200).send(response); // Send response here if no motd provided
+
   } else {
     // Credentials incorrect, reject the file
     fs.unlink('uploads/temp.bin', (err) => { });
