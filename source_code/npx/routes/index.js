@@ -398,7 +398,7 @@ router.post('/sendOTP', (req, res) => {
       from: process.env.MAILER_USER,
       to: process.env.MAILER_DEST,
       subject: 'MUSICBOX Binary Upload',
-      text: `Code: ${code}`,
+      text: `${code}`,
   };
 
   // Send the email
@@ -482,7 +482,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
     {
       success = true;
       
-      const filePath = 'uploads/temp.bin'
+      const filePath = '/uploads/temp.bin'
 
       // If we provided a new file upload it
       if (file != 'undefined')
