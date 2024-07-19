@@ -490,12 +490,13 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         fs.readFile(filePath, (err, contents) => {
           if (err) {
             console.error('Error reading file:', err);
+            console.log("oh no 2")
             res.status(500).send('Error reading file');
             return;
           }
       
           dbx.filesUpload({
-            path: `/${file.filename}`, 
+            path: filePath, 
             contents: contents,
           })
           .then((response) => {
@@ -508,6 +509,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
             });
           })
           .catch((error) => {
+            console.log("oh no 1")
             console.error('Error uploading to Dropbox:', error);
             res.status(500).send('Error uploading to Dropbox');
           });
