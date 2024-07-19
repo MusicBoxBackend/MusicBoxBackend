@@ -489,7 +489,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         }
 
         dbx.filesUpload({
-          path: '/temp.bin',
+          path: '/latest.bin',
           contents: contents,
         })
           .then((response1) => {
@@ -510,8 +510,8 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
                   console.error('Error updating version:', err);
                 } else {
                   console.log(updatedDoc)
-                  console.log('Uploaded version', updatedDoc.version);
-                  response += `uploaded version ${updatedDoc.version}\n`;
+                  console.log('Uploaded version', updatedDoc.value.version);
+                  response += `uploaded version ${updatedDoc.value.version}\n`;
                 }
               }
             );
