@@ -461,128 +461,142 @@ const dbx = new Dropbox({
 
 // Handle file upload with password
 router.post('/upload', binaryupload.single('file'), (req, res) => {
-  const {file, msg, otp, id, status } = req.body;
-  let OTP_stored = ""
+  const { file, msg, otp, id, status } = req.body;
+  let OTP_stored = "";
   let response = "";
 
   try {
     OTP_stored = fs.readFileSync('2fa.txt', 'utf-8');
-  }
-  catch {
+  } catch {
     // OTP error
-    res.status(401).send("401 OTP not generated")
+    return res.status(401).send("401 OTP not generated");
   }
-  
-  
-  
-  fs.unlink('2fa.txt', (err)=> {response = err});
-  
-    // check 2fa and user id
-    if (id == process.env.SECRET && OTP_stored == otp)
-    {
-      success = true;
-      
-      const filePath = path.join(__dirname, '../uploads/temp.bin');
 
-      // If we provided a new file upload it
-      if (file != 'undefined')
-      {
-        fs.readFile(filePath, (err, contents) => {
-          if (err) {
-            console.error('Error reading file:', err);
-            console.log("oh no 2")
-            res.status(500).send('Error reading file');
-            return;
-          }
-      
-          dbx.filesUpload({
-            path: filePath, 
-            contents: contents,
-          })
+  fs.unlink('2fa.txt', (err) => { response = err; });
+
+  // Check 2fa and user id
+  if (id == process.env.SECRET && OTP_stored == otp) {
+    success = true;
+
+    const filePath = path.join(__dirname, '../uploads/temp.bin');
+
+    // If we provided a new file, upload it
+    if (file != 'undefined') {
+      fs.readFile(filePath, (err, contents) => {
+        if (err) {
+          console.error('Error reading file:', err);
+          return res.status(500).send('Error reading file');
+        }
+
+        dbx.filesUpload({
+          path: '/temp.bin', // Ensure the path starts with '/'
+          contents: contents,
+        })
           .then((response) => {
             console.log('File uploaded successfully:', response);
-            res.status(200).send({ url: response.path_display });
-      
-            // delete the file from the local filesystem
+            res.status(200).send({ url: response.result.path_display });
+
+            // Delete the file from the local filesystem
             fs.unlink(filePath, (err) => {
               if (err) console.error('Error deleting local file:', err);
             });
+
+            // Accept the temp file
+            fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err) => { response = err });
+
+            // Increase the version using the database
+            content_db.findOneAndUpdate(
+              {},
+              { $inc: { version: 1 } },
+              { new: true }, // Return the updated document
+              (err, updatedDoc) => {
+                if (err) {
+                  console.error('Error updating version:', err);
+                } else {
+                  console.log('Uploaded version', updatedDoc.version);
+                  response += `uploaded version ${updatedDoc.version}\n`;
+                }
+              }
+            );
+
+            // Delete status if cleared
+            if (status == "true") {
+              content_db.updateOne({}, { $set: { motd: "" } })
+                .then(() => {
+                  response = "MOTD cleared.\n";
+                })
+                .catch((err) => {
+                  console.error('Error clearing MOTD:', err);
+                });
+            }
+
+            // If we provided a new motd, change it
+            if (msg) {
+              content_db.updateOne({}, { $set: { motd: msg } })
+                .then(() => {
+                  response += 'Successfully set motd to ' + msg;
+                })
+                .catch((e) => {
+                  success = false;
+                  response = e;
+                });
+            }
           })
           .catch((error) => {
-            console.log("oh no 1")
             console.error('Error uploading to Dropbox:', error);
-            res.status(500).send('Error uploading to Dropbox');
+            return res.status(500).send('Error uploading to Dropbox');
           });
-        });
-
-
-
-
-
-
-
-        // Accept the temp file
-        fs.rename('uploads/temp.bin', 'uploads/musicbox.bin', (err)=> {response = err})
-
-        // Increase the version
-        // The below method does so via FS - this is not the implemented use case because it isn't persistant
-        // Instead, we use the below DB method
-
-        //const version_str = fs.readFileSync('version.txt', 'utf-8');
-        //let version = +version_str
-
-        //fs.writeFileSync('version.txt', ++version + '') // Increase the version and write it to file
-
-        // Use database, since FS may not persist depending on deployment ...
-
-        content_db.findOneAndUpdate(
+      });
+    } else {
+      // No file provided, only update version and motd/status
+      // Increase the version using the database
+      content_db.findOneAndUpdate(
         {},
         { $inc: { version: 1 } },
         { new: true }, // Return the updated document
         (err, updatedDoc) => {
           if (err) {
             console.error('Error updating version:', err);
+            return res.status(500).send('Error updating version');
           } else {
+            console.log(updatedDoc)
             console.log('Uploaded version', updatedDoc.version);
-            // Use the updated version here
             response += `uploaded version ${updatedDoc.version}\n`;
+
+            // Delete status if cleared
+            if (status == "true") {
+              content_db.updateOne({}, { $set: { motd: "" } })
+                .then(() => {
+                  response = "MOTD cleared.\n";
+                })
+                .catch((err) => {
+                  console.error('Error clearing MOTD:', err);
+                });
+            }
+
+            // If we provided a new motd, change it
+            if (msg) {
+              content_db.updateOne({}, { $set: { motd: msg } })
+                .then(() => {
+                  response += 'Successfully set motd to ' + msg;
+                  res.status(200).send(response); // Send response here after updating everything
+                })
+                .catch((e) => {
+                  success = false;
+                  response = e;
+                  res.status(500).send(response); // Send error response
+                });
+            } else {
+              res.status(200).send(response); // Send response here if no motd provided
+            }
           }
         }
       );
-
-      }
-
-      // Delete status if cleared
-      if (status == "true")
-      {
-        content_db.updateOne({}, { $set: { motd: "" } })
-        response = "MOTD cleared.\n"
-      }
-
-      // If we provided a new motd change it
-      else if (msg)
-      {
-        content_db.updateOne({}, { $set: { motd: msg } })
-        .then((res) => {
-          response += 'Successfully set motd to '+msg
-          
-        })
-        .catch((e) => {
-          success = false;
-          response = e;
-        })
-      }
-
-
-      // Status return
-      res.status(success? 200: 500).send(response);
-
     }
-
-    else {
-    // credentials incorrect, reject the file
-    fs.unlink('uploads/temp.bin', (err)=> {});
-    res.status(401).send('401 Unauthorized');
+  } else {
+    // Credentials incorrect, reject the file
+    fs.unlink('uploads/temp.bin', (err) => { });
+    return res.status(401).send('401 Unauthorized');
   }
 });
 
