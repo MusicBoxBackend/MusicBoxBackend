@@ -12,6 +12,8 @@ const cron = require('node-cron');
 const { Dropbox } = require('dropbox');
 
 let fetch; // Placeholder for fetch
+let dbxToken
+let dbx
 
 (async () => {
   fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
@@ -371,11 +373,39 @@ router.get('/getMotd', (req, res) => {
 
 })
 
+// to refresh dbx access tokens
+// used when getting a 401 error
+const getNewAccessToken = async () => {
+  try {
+    const response = await axios.post('https://api.dropbox.com/oauth2/token', null, {
+      params: {
+        grant_type: 'refresh_token',
+        refresh_token: process.env.DROPBOX_REFRESH_TOKEN,
+        client_id: process.env.DROPBOX_CLIENT_ID,
+        client_secret: process.env.DROPBOX_CLIENT_SECRET
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    dbxToken = response.data.access_token;
+    dbx = new Dropbox({
+      accessToken: dbxToken,
+      fetch: fetch,
+    });
+
+  } catch (error) {
+    console.error('Error refreshing access token:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
 const createSharedLink = async (filePath) => {
   const url = 'https://api.dropboxapi.com/2/sharing/create_shared_link';
 
   const headers = {
-    'Authorization': `Bearer ${process.env.DROPBOX_ACCESS_TOKEN}`,
+    'Authorization': `Bearer ${dbxToken}`,
     'Content-Type': 'application/json',
   };
 
@@ -393,7 +423,7 @@ const createSharedLink = async (filePath) => {
 
     return directDownloadLink
   } catch (error) {
-    console.error('Error creating shared link:', error.response ? error.response.data : error.message);
+    //console.error('Error creating shared link:', error.response ? error.response.data : error.message);
   }
 };
 
@@ -410,7 +440,13 @@ router.get('/version', async (req,res) => {
   // Using DB (currently more reliable for persistance)
 
   // Get the download link for the latest version
-  const link = await createSharedLink("/latest.bin");
+  let link = await createSharedLink("/latest.bin");
+  if (!link)
+  {
+    // need to refresh access token, try again
+    await getNewAccessToken()
+    link = await createSharedLink("/latest.bin");
+  }
 
 
     content_db.find({}).toArray()
@@ -489,11 +525,6 @@ function generateRandomPassword(length) {
   return password;
 }
 
-const dbx = new Dropbox({
-  accessToken: process.env.DROPBOX_ACCESS_TOKEN,
-  fetch: fetch,
-});
-
 
 
 // Handle file upload with password
@@ -501,6 +532,52 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
   const { file, msg, otp, id, status } = req.body;
   let OTP_stored = "";
   let response = "";
+
+  function updateDatabaseVersion()
+  {
+    // Delete the file from the local filesystem
+    fs.unlink(filePath, (err) => {
+      if (err) console.error('Error deleting local file:', err);
+    });
+
+    // Increase the version using the database
+    content_db.findOneAndUpdate(
+      {},
+      { $inc: { version: 1 } },
+      { new: true }, // Return the updated document
+      (err, updatedDoc) => {
+        if (err) {
+          console.error('Error updating version:', err);
+        } else {
+          console.log('Uploaded version', updatedDoc.value.version);
+          response += `uploaded version ${updatedDoc.value.version}\n`;
+        }
+      }
+    );
+
+    // Delete status if cleared
+    if (status == "true") {
+      content_db.updateOne({}, { $set: { motd: "" } })
+        .then(() => {
+          response = "MOTD cleared.\n";
+        })
+        .catch((err) => {
+          console.error('Error clearing MOTD:', err);
+        });
+    }
+
+    // If we provided a new motd, change it
+    if (msg) {
+      content_db.updateOne({}, { $set: { motd: msg } })
+        .then(() => {
+          response += 'Successfully set motd to ' + msg;
+        })
+        .catch((e) => {
+          success = false;
+          response = e;
+        });
+    }
+  }
 
   try {
     OTP_stored = fs.readFileSync('2fa.txt', 'utf-8');
@@ -532,52 +609,26 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
           .then((response1) => {
             console.log('File uploaded successfully:', response1);
 
-            // Delete the file from the local filesystem
-            fs.unlink(filePath, (err) => {
-              if (err) console.error('Error deleting local file:', err);
-            });
-
-            // Increase the version using the database
-            content_db.findOneAndUpdate(
-              {},
-              { $inc: { version: 1 } },
-              { new: true }, // Return the updated document
-              (err, updatedDoc) => {
-                if (err) {
-                  console.error('Error updating version:', err);
-                } else {
-                  console.log('Uploaded version', updatedDoc.value.version);
-                  response += `uploaded version ${updatedDoc.value.version}\n`;
-                }
-              }
-            );
-
-            // Delete status if cleared
-            if (status == "true") {
-              content_db.updateOne({}, { $set: { motd: "" } })
-                .then(() => {
-                  response = "MOTD cleared.\n";
-                })
-                .catch((err) => {
-                  console.error('Error clearing MOTD:', err);
-                });
-            }
-
-            // If we provided a new motd, change it
-            if (msg) {
-              content_db.updateOne({}, { $set: { motd: msg } })
-                .then(() => {
-                  response += 'Successfully set motd to ' + msg;
-                })
-                .catch((e) => {
-                  success = false;
-                  response = e;
-                });
-            }
+            updateDatabaseVersion()
           })
-          .catch((error) => {
-            console.error('Error uploading to Dropbox:', error);
-            return res.status(500).send('Error uploading to Dropbox');
+          .catch(async (error) => {
+            
+            // Try again after refreshing access token
+            await getNewAccessToken()
+
+            dbx.filesUpload({
+              path: '/latest.bin',
+              contents: contents,
+            })
+              .then((response1) => {
+                console.log('File uploaded successfully (after refeshing token):', response1);
+    
+                updateDatabaseVersion()
+              })
+              .catch((error) => {
+                console.error('Error uploading to Dropbox:', error);
+                return res.status(500).send('Error uploading to Dropbox');
+              });
           });
       });
 
