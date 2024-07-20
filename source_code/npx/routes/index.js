@@ -213,9 +213,9 @@ router.post('/certificate', (req, res) => {
   // Make a GET request to the website
   const reqHttps = https.get(src, (response) => {
     // Extract the certificate from the response
-    const certificate = response.socket.getPeerCertificate(true)//.issuerCertificate;
+    const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
 
-    if (certificate) {
+    if (certificate.raw) {
         // Convert certificate to PEM format
         const cert = certificate.raw.toString('base64');
         let pem = "-----BEGIN CERTIFICATE-----\n";
