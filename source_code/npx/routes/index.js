@@ -539,6 +539,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
   const { file, msg, otp, id, status } = req.body;
   let OTP_stored = "";
   let response = "";
+  const filePath = path.join(__dirname, '../uploads/temp.bin');
 
   function updateDatabaseVersion()
   {
@@ -599,7 +600,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
   if (id == process.env.SECRET && OTP_stored == otp) {
     success = true;
 
-    const filePath = path.join(__dirname, '../uploads/temp.bin');
+    
 
     // If we provided a new file, upload it
     if (file != 'undefined') {
