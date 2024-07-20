@@ -562,29 +562,6 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         }
       }
     );
-
-    // Delete status if cleared
-    if (status == "true") {
-      content_db.updateOne({}, { $set: { motd: "" } })
-        .then(() => {
-          response = "MOTD cleared.\n";
-        })
-        .catch((err) => {
-          console.error('Error clearing MOTD:', err);
-        });
-    }
-
-    // If we provided a new motd, change it
-    if (msg) {
-      content_db.updateOne({}, { $set: { motd: msg } })
-        .then(() => {
-          response += 'Successfully set motd to ' + msg;
-        })
-        .catch((e) => {
-          success = false;
-          response = e;
-        });
-    }
   }
 
   try {
@@ -642,61 +619,42 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
           });
       });
 
-      res.status(200).send(response);
-
-    } else {
-      // No file provided, only update version and motd/status
-      // Increase the version using the database
-      content_db.findOneAndUpdate(
-        {},
-        { $inc: { version: 1 } },
-        { new: true }, // Return the updated document
-        (err, updatedDoc) => {
-          if (err) {
-            console.error('Error updating version:', err);
-            return res.status(500).send('Error updating version');
-          } else {
-            
-            console.log('Uploaded version', updatedDoc.version);
-            response += `uploaded version ${updatedDoc.version}\n`;
-
-            // Delete status if cleared
-            if (status == "true") {
-              content_db.updateOne({}, { $set: { motd: "" } })
-                .then(() => {
-                  response = "MOTD cleared.\n";
-                })
-                .catch((err) => {
-                  console.error('Error clearing MOTD:', err);
-                });
-            }
-
-            // If we provided a new motd, change it
-            if (msg) {
-              content_db.updateOne({}, { $set: { motd: msg } })
-                .then(() => {
-                  response += 'Successfully set motd to ' + msg;
-                  res.status(200).send(response); // Send response here after updating everything
-                })
-                .catch((e) => {
-                  success = false;
-                  response = e;
-                  res.status(500).send(response); // Send error response
-                });
-            } else {
-              
-            }
-          }
-        }
-      );
+    } 
+    
+    // Updating motd
+    // Delete status if cleared
+    if (status == "true") {
+      content_db.updateOne({}, { $set: { motd: "" } })
+        .then(() => {
+          response += " MOTD cleared.\n";
+        })
+        .catch((err) => {
+          console.error('Error clearing MOTD:', err);
+        });
     }
-    res.status(200).send(response); // Send response here if no motd provided
+
+    // If we provided a new motd, change it
+    if (msg) {
+      content_db.updateOne({}, { $set: { motd: msg } })
+        .then(() => {
+          response += 'Successfully set motd to ' + msg;
+        })
+        .catch((e) => {
+          success = false;
+          response = e;
+          res.status(500).send(response); // Send error response
+        });
+    }
+
+    res.status(200).send(response);
 
   } else {
-    // Credentials incorrect, reject the file
-    fs.unlink('uploads/temp.bin', (err) => { });
+    // Credentials incorrect, reject the upload
     return res.status(401).send('401 Unauthorized');
   }
+
+  // remove the temporary upload. It lives in dropbox or has been rejected now.
+  fs.unlink('uploads/temp.bin', (err) => { });
 });
 
 // Serve files
