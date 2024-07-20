@@ -535,30 +535,31 @@ function generateRandomPassword(length) {
 
 
 // Handle file upload with password
-router.post('/upload', binaryupload.single('file'), (req, res) => {
+router.post('/upload', binaryupload.single('file'), async (req, res) => {
   const { file, msg, otp, id, status } = req.body;
   let OTP_stored = "";
   let response = "";
   const filePath = path.join(__dirname, '../uploads/temp.bin');
 
-  async function updateDatabaseVersion()
-  {
-    
-
-    // Increase the version using the database
-    await content_db.findOneAndUpdate(
-      {},
-      { $inc: { version: 1 } },
-      { new: true }, // Return the updated document
-      (err, updatedDoc) => {
-        if (err) {
-          console.error('Error updating version:', err);
-        } else {
-          console.log('Uploaded version', updatedDoc.value.version);
-          response += `uploaded version ${updatedDoc.value.version}\n`;
+  async function updateDatabaseVersion() {
+    return new Promise((resolve, reject) => {
+      // Increase the version using the database
+      content_db.findOneAndUpdate(
+        {},
+        { $inc: { version: 1 } },
+        { new: true }, // Return the updated document
+        (err, updatedDoc) => {
+          if (err) {
+            console.error('Error updating version:', err);
+            reject(err);
+          } else {
+            console.log('Uploaded version', updatedDoc.value.version);
+            response += `uploaded version ${updatedDoc.value.version}\n`;
+            resolve();
+          }
         }
-      }
-    );
+      );
+    });
   }
 
   try {
@@ -568,90 +569,64 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
     return res.status(401).send("401 OTP not generated");
   }
 
-  fs.unlink('2fa.txt', (err) => { response = err; });
+  fs.unlink('2fa.txt', (err) => {
+    if (err) {
+      console.error('Error deleting 2fa.txt:', err);
+    }
+  });
 
   // Check 2fa and user id
   if (id == process.env.SECRET && OTP_stored == otp) {
-    success = true;
+    try {
+      if (file !== 'undefined') {
+        const contents = fs.readFileSync(filePath);
 
-    
-
-    // If we provided a new file, upload it
-    if (file != 'undefined') {
-      fs.readFile(filePath, (err, contents) => {
-        if (err) {
-          console.error('Error reading file:', err);
-          return res.status(500).send('Error reading file');
+        try {
+          await dbx.filesUpload({
+            path: '/latest.bin',
+            contents: contents,
+            mode: 'overwrite',
+          });
+          console.log('File uploaded successfully!');
+        } catch (error) {
+          console.error('Error uploading to Dropbox:', error);
+          await getNewAccessToken();
+          await dbx.filesUpload({
+            path: '/latest.bin',
+            contents: contents,
+            mode: 'overwrite',
+          });
+          console.log('File uploaded successfully (after refreshing token):');
         }
 
-        dbx.filesUpload({
-          path: '/latest.bin',
-          contents: contents,
-          mode: 'overwrite',
-        })
-          .then(async (dbx_response) => {
-            console.log('File uploaded successfully!'); 
+        await updateDatabaseVersion();
+      }
 
-            await updateDatabaseVersion()
-          })
-          .catch(async (error) => {
-            
-            // Try again after refreshing access token
-            await getNewAccessToken()
+      // Updating motd
+      if (status === "true") {
+        await content_db.updateOne({}, { $set: { motd: "" } });
+        response += "MOTD cleared.\n";
+      }
 
-            dbx.filesUpload({
-              path: '/latest.bin',
-              contents: contents,
-              mode: 'overwrite',
-            })
-              .then(async (dbx_response) => {
-                console.log('File uploaded successfully (after refeshing token):');
-    
-                await updateDatabaseVersion()
-              })
-              .catch((error) => {
-                console.error('Error uploading to Dropbox:', error);
-                return res.status(500).send('Error uploading to Dropbox');
-              });
-          });
-      });
+      if (msg) {
+        await content_db.updateOne({}, { $set: { motd: msg } });
+        response += `Successfully set motd to ${msg}\n`;
+      }
 
-    } 
-    
-    // Updating motd
-    // Delete status if cleared
-    if (status == "true") {
-      content_db.updateOne({}, { $set: { motd: "" } })
-        .then(() => {
-          response += " MOTD cleared.\n";
-        })
-        .catch((err) => {
-          console.error('Error clearing MOTD:', err);
-        });
+      console.log("Response:", response);
+      res.status(200).send(response);
+
+    } catch (err) {
+      console.error('Error processing request:', err);
+      res.status(500).send('Internal Server Error');
     }
-
-    // If we provided a new motd, change it
-    if (msg) {
-      content_db.updateOne({}, { $set: { motd: msg } })
-        .then(() => {
-          response += 'Successfully set motd to ' + msg;
-        })
-        .catch((e) => {
-          success = false;
-          response = e;
-          res.status(500).send(response); // Send error response
-        });
-    }
-
-    console.log("Response:", response)
-    res.status(200).send(response);
 
   } else {
     // Credentials incorrect, reject the upload
     return res.status(401).send('401 Unauthorized');
   }
 
-  // remove the temporary upload. It lives in dropbox or has been rejected now.
+  // Remove the temporary upload. It lives in Dropbox or has been rejected now.
   // Delete the file from the local filesystem
   fs.unlink(filePath, (err) => {
     if (err) console.error('Error deleting local file:', err);
