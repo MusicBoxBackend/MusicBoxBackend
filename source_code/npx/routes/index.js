@@ -201,17 +201,19 @@ router.post('/isLinked', async(req, res) => {
 })
 
 // From ESP, get the certificate so we can serve OTA updates
-router.get('/certificate', (req, res) => {
+router.post('/certificate', (req, res) => {
   // Where are our downloads hosted?
-  //let src = "https://musicbox-backend-178z.onrender.com/"
-  let src = "https://www.dropbox.com/"
+  // let src = "https://musicbox-backend-178z.onrender.com/"
+  // let src = "https://www.dropbox.com/scl/fi"
+
+  let src = req.body.link // get certificate of provided source
 
 
 
   // Make a GET request to the website
   const reqHttps = https.get(src, (response) => {
     // Extract the certificate from the response
-    const certificate = response.socket.getPeerCertificate(true).issuerCertificate;
+    const certificate = response.socket.getPeerCertificate(true)//.issuerCertificate;
 
     if (certificate) {
         // Convert certificate to PEM format
@@ -587,7 +589,6 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
             contents: contents,
             mode: 'overwrite',
           });
-          console.log('File uploaded successfully!');
         } catch (error) {
           console.error('Error uploading to Dropbox:', error);
           await getNewAccessToken();
@@ -596,7 +597,6 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
             contents: contents,
             mode: 'overwrite',
           });
-          console.log('File uploaded successfully (after refreshing token):');
         }
 
         await updateDatabaseVersion();
@@ -612,8 +612,6 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
         await content_db.updateOne({}, { $set: { motd: msg } });
         response += `Successfully set motd to ${msg}\n`;
       }
-
-      console.log("Response:", response);
       res.status(200).send(response);
 
     } catch (err) {
