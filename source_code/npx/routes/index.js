@@ -541,12 +541,12 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
   let response = "";
   const filePath = path.join(__dirname, '../uploads/temp.bin');
 
-  function updateDatabaseVersion()
+  async function updateDatabaseVersion()
   {
     
 
     // Increase the version using the database
-    content_db.findOneAndUpdate(
+    await content_db.findOneAndUpdate(
       {},
       { $inc: { version: 1 } },
       { new: true }, // Return the updated document
@@ -589,10 +589,10 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
           contents: contents,
           mode: 'overwrite',
         })
-          .then((dbx_response) => {
+          .then(async (dbx_response) => {
             console.log('File uploaded successfully!'); 
 
-            updateDatabaseVersion()
+            await updateDatabaseVersion()
           })
           .catch(async (error) => {
             
@@ -604,10 +604,10 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
               contents: contents,
               mode: 'overwrite',
             })
-              .then((dbx_response) => {
+              .then(async (dbx_response) => {
                 console.log('File uploaded successfully (after refeshing token):');
     
-                updateDatabaseVersion()
+                await updateDatabaseVersion()
               })
               .catch((error) => {
                 console.error('Error uploading to Dropbox:', error);
