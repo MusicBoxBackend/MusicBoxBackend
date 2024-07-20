@@ -19,6 +19,8 @@ let dbx
   fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 })();
 
+
+
 //Backend routes (endpoints)
 const host = process.env.BASE_URL
 router.use(express.static(path.join(__dirname, '../public')));
@@ -400,7 +402,11 @@ const getNewAccessToken = async () => {
     throw error;
   }
 };
-getNewAccessToken() // generate the first token
+
+(async () => {
+  await getNewAccessToken() // generate the first token
+})();
+
 
 const createSharedLink = async (filePath) => {
   const url = 'https://api.dropboxapi.com/2/sharing/create_shared_link';
