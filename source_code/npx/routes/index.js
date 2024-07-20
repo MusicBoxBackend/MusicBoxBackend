@@ -14,6 +14,7 @@ const { Dropbox } = require('dropbox');
 let fetch; // Placeholder for fetch
 let dbxToken
 let dbx
+getNewAccessToken() //asyncronously get the first access token of the session
 
 (async () => {
   fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
