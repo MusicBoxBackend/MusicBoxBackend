@@ -612,6 +612,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         dbx.filesUpload({
           path: '/latest.bin',
           contents: contents,
+          mode: 'overwrite',
         })
           .then((response1) => {
             console.log('File uploaded successfully:', response1);
@@ -626,6 +627,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
             dbx.filesUpload({
               path: '/latest.bin',
               contents: contents,
+              mode: 'overwrite',
             })
               .then((response1) => {
                 console.log('File uploaded successfully (after refeshing token):', response1);
