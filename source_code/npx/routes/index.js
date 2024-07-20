@@ -543,10 +543,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
 
   function updateDatabaseVersion()
   {
-    // Delete the file from the local filesystem
-    fs.unlink(filePath, (err) => {
-      if (err) console.error('Error deleting local file:', err);
-    });
+    
 
     // Increase the version using the database
     content_db.findOneAndUpdate(
@@ -592,8 +589,8 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
           contents: contents,
           mode: 'overwrite',
         })
-          .then((response1) => {
-            console.log('File uploaded successfully:', response1);
+          .then((dbx_response) => {
+            console.log('File uploaded successfully!'); 
 
             updateDatabaseVersion()
           })
@@ -607,8 +604,8 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
               contents: contents,
               mode: 'overwrite',
             })
-              .then((response1) => {
-                console.log('File uploaded successfully (after refeshing token):', response1);
+              .then((dbx_response) => {
+                console.log('File uploaded successfully (after refeshing token):');
     
                 updateDatabaseVersion()
               })
@@ -646,6 +643,7 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
         });
     }
 
+    console.log("Response:", response)
     res.status(200).send(response);
 
   } else {
@@ -654,7 +652,10 @@ router.post('/upload', binaryupload.single('file'), (req, res) => {
   }
 
   // remove the temporary upload. It lives in dropbox or has been rejected now.
-  fs.unlink('uploads/temp.bin', (err) => { });
+  // Delete the file from the local filesystem
+  fs.unlink(filePath, (err) => {
+    if (err) console.error('Error deleting local file:', err);
+  });
 });
 
 // Serve files
