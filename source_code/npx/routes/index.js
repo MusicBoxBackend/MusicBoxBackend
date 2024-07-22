@@ -588,7 +588,7 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
 
         // Get the sha of the previous binary
         // note this will fail if the github does not have a binary, but it always should.
-        content_db.find({}).toArray()
+        await content_db.find({}).toArray()
         .then(data => {
           sha = String(data[0].sha)
         })
