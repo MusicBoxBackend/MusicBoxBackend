@@ -465,7 +465,8 @@ router.get('/version', async (req,res) => {
     content_db.find({}).toArray()
     .then(data => {
       const v = String(data[0].version)
-      res.send({'version': v, 'link': process.env.FIRMWARE_URL}) // Res must send a string or object
+      const sha = String(data[0].sha)
+      res.send({'version': v, 'link': process.env.FIRMWARE_URL, 'sha': sha}) // Res must send a string or object
     })
   
 })
@@ -608,12 +609,16 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
             'Accept': 'application/vnd.github.v3+json'
           }
         })
-        .then(response => {
-          console.log('File uploaded successfully:', response.data);
+        .then(async response => {
+          //console.log('File uploaded successfully:', response.data);
+
+          // store the SHA 
+          await content_db.updateOne({}, { $set: { sha: response.data.content.sha} });
+          
         })
         .catch(error => {
           console.error('Error uploading file:', error.response ? error.response.data : error.message);
-          return res.status(error.response.data.status).send(error.response.data.message);
+          return res.status(500).send(error.response ? error.response.data : error.message);
         });
 
         // Old method: dropbox: encryption was too strong!
