@@ -112,7 +112,7 @@ const User = mongoose.model('User', userSchema);
 const storage = multer.diskStorage({
   destination: './uploads',
   filename: function (req, file, cb) {
-    const fileName = 'temp.bin'; // Set a fixed file name (to overwrite binaries)
+    const fileName = 'firmware.bin'; // Set a fixed file name (to overwrite binaries)
     cb(null, fileName);
   }
 });
@@ -410,6 +410,7 @@ const getNewAccessToken = async () => {
 })();
 
 
+// DEPRECATED: not using dropbox. Don't need this link because github link is persistent
 const createSharedLink = async (filePath) => {
   const url = 'https://api.dropboxapi.com/2/sharing/create_shared_link';
 
@@ -448,20 +449,23 @@ router.get('/version', async (req,res) => {
 
   // Using DB (currently more reliable for persistance)
 
+  // DEPRECATED: Using github instead of dropbox. Link is persistent.
+
   // Get the download link for the latest version
-  let link = await createSharedLink("/latest.bin");
-  if (!link)
-  {
-    // need to refresh access token, try again
-    await getNewAccessToken()
-    link = await createSharedLink("/latest.bin");
-  }
+
+  // let link = await createSharedLink("/latest.bin");
+  // if (!link)
+  // {
+  //   // need to refresh access token, try again
+  //   await getNewAccessToken()
+  //   link = await createSharedLink("/latest.bin");
+  // }
 
 
     content_db.find({}).toArray()
     .then(data => {
       const v = String(data[0].version)
-      res.send({'version': v, 'link': link}) // Res must send a string or object
+      res.send({'version': v, 'link': process.env.FIRMWARE_URL}) // Res must send a string or object
     })
   
 })
@@ -541,7 +545,7 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
   const { file, msg, otp, id, status } = req.body;
   let OTP_stored = "";
   let response = "";
-  const filePath = path.join(__dirname, '../uploads/temp.bin');
+  const filePath = path.join(__dirname, '../uploads/firmware.bin');
 
   async function updateDatabaseVersion() {
     return new Promise((resolve, reject) => {
@@ -581,23 +585,55 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
   if (id == process.env.SECRET && OTP_stored == otp) {
     try {
       if (file !== 'undefined') {
-        const contents = fs.readFileSync(filePath);
+        const owner = 'MusicBoxApplication';
+        const repo = 'firmware';
+        const branch = 'main';
+        const token = process.env.FIRMWARE_PAT;
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
-        try {
-          await dbx.filesUpload({
-            path: '/latest.bin',
-            contents: contents,
-            mode: 'overwrite',
-          });
-        } catch (error) {
-          console.error('Error uploading to Dropbox:', error);
-          await getNewAccessToken();
-          await dbx.filesUpload({
-            path: '/latest.bin',
-            contents: contents,
-            mode: 'overwrite',
-          });
-        }
+        // Read the file content
+        const content = fs.readFileSync(path.join(__dirname, 'file.txt'), 'base64');
+
+        // Create the API request payload
+        const data = {
+          message: 'Upload file via API',
+          content: content,
+          branch: branch
+        };
+
+        // Send the API request
+        axios.put(apiUrl, data, {
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        })
+        .then(response => {
+          console.log('File uploaded successfully:', response.data);
+        })
+        .catch(error => {
+          console.error('Error uploading file:', error.response ? error.response.data : error.message);
+        });
+
+        // Old method: dropbox: encryption was too strong!
+
+        // const contents = fs.readFileSync(filePath);
+
+        // try {
+        //   await dbx.filesUpload({
+        //     path: '/latest.bin',
+        //     contents: contents,
+        //     mode: 'overwrite',
+        //   });
+        // } catch (error) {
+        //   console.error('Error uploading to Dropbox:', error);
+        //   await getNewAccessToken();
+        //   await dbx.filesUpload({
+        //     path: '/latest.bin',
+        //     contents: contents,
+        //     mode: 'overwrite',
+        //   });
+        // }
 
         await updateDatabaseVersion();
       }
