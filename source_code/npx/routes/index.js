@@ -589,7 +589,7 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
         const repo = 'firmware';
         const branch = 'main';
         const token = process.env.FIRMWARE_PAT;
-        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${'firmware.bin'}`;
 
         // Read the file content
         const content = fs.readFileSync(filePath, 'base64');
@@ -613,6 +613,7 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
         })
         .catch(error => {
           console.error('Error uploading file:', error.response ? error.response.data : error.message);
+          return res.status(error.response.data.status).send(error.response.data.message);
         });
 
         // Old method: dropbox: encryption was too strong!
