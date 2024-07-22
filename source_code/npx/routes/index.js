@@ -204,32 +204,34 @@ router.post('/certificate', (req, res) => {
   // Make a GET request to the website
   const reqHttps = https.get(src, (response) => {
     // Extract the certificate from the response
-    const certificate = response.socket.getPeerCertificate(true).issuerCertificate.issuerCertificate;
+    try
+    {
+      const certificate = response.socket.getPeerCertificate(true).issuerCertificate.issuerCertificate;
+      const cert = certificate.raw.toString('base64');
+      let pem = "-----BEGIN CERTIFICATE-----\n";
+      
+      for (let i = 0; i < cert.length; i += 64) {
+          pem += cert.slice(i, i + 64) + '\n';
+      }
+      pem += "-----END CERTIFICATE-----\n";
 
-    if (certificate.raw) {
-        // Convert certificate to PEM format
-        const cert = certificate.raw.toString('base64');
-        let pem = "-----BEGIN CERTIFICATE-----\n";
-        
-        for (let i = 0; i < cert.length; i += 64) {
-            pem += cert.slice(i, i + 64) + '\n';
-        }
-        pem += "-----END CERTIFICATE-----\n";
-
-        // Write PEM string to cert.txt, overriding if it exists, creating it if it doesn't
-        fs.writeFileSync('cert.txt', pem);
-        
-        // Send PEM string as response
-        res.set('Content-Type', 'text/plain');
-        res.send(pem);
-    } else {
-        // If certificate is not valid, load the contents of cert.txt to PEM string
-        const pem = fs.readFileSync('cert.txt', 'utf8');
-        
-        // Send PEM string from file as response
-        res.set('Content-Type', 'text/plain');
-        res.send(pem);
+      // Write PEM string to cert.txt, overriding if it exists, creating it if it doesn't
+      fs.writeFileSync('cert.txt', pem);
+      
+      // Send PEM string as response
+      res.set('Content-Type', 'text/plain');
+      res.send(pem);
     }
+    catch
+    {
+      // If certificate is not valid, load the contents of cert.txt to PEM string
+      const pem = fs.readFileSync('cert.txt', 'utf8');
+      
+      // Send PEM string from file as response
+      res.set('Content-Type', 'text/plain');
+      res.send(pem);
+    }
+    
 });
 
   reqHttps.on('error', (err) => {
@@ -550,8 +552,8 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
             console.error('Error updating version:', err);
             reject(err);
           } else {
-            console.log('Uploaded version', updatedDoc.value.version);
-            response += `uploaded version ${updatedDoc.value.version}\n`;
+            console.log('Uploaded version', updatedDoc.value.version + 1);
+            response += `uploaded version ${updatedDoc.value.version + 1}\n`;
             resolve();
           }
         }
