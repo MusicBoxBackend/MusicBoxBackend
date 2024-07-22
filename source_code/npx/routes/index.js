@@ -592,7 +592,7 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
         // Read the file content
-        const content = fs.readFileSync(path.join(__dirname, 'file.txt'), 'base64');
+        const content = fs.readFileSync(filePath, 'base64');
 
         // Create the API request payload
         const data = {
