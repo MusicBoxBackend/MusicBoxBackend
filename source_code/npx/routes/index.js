@@ -9,15 +9,16 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const axios = require('axios')
 const cron = require('node-cron');
-const { Dropbox } = require('dropbox');
+// const { Dropbox } = require('dropbox');
 
-let fetch; // Placeholder for fetch
-let dbxToken
-let dbx
+// let fetch; // Placeholder for fetch
+// let dbxToken
+// let dbx
 
-(async () => {
-  fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
-})();
+// for dropbox 
+// (async () => {
+//   fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
+// })();
 
 
 
@@ -25,16 +26,6 @@ let dbx
 const host = process.env.BASE_URL
 router.use(express.static(path.join(__dirname, '../public')));
 
-// Get the date
-function getDate()
-{
-  var today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-  var yyyy = today.getFullYear();
-
-  return mm + '/' + dd + '/' + yyyy;
-}
 
 let latest;
   
@@ -379,63 +370,63 @@ router.get('/getMotd', (req, res) => {
 
 // to refresh dbx access tokens
 // used when getting a 401 error
-const getNewAccessToken = async () => {
-  try {
-    const response = await axios.post('https://api.dropbox.com/oauth2/token', null, {
-      params: {
-        grant_type: 'refresh_token',
-        refresh_token: process.env.DROPBOX_REFRESH_TOKEN,
-        client_id: process.env.DROPBOX_CLIENT_ID,
-        client_secret: process.env.DROPBOX_CLIENT_SECRET
-      },
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    });
+// const getNewAccessToken = async () => {
+//   try {
+//     const response = await axios.post('https://api.dropbox.com/oauth2/token', null, {
+//       params: {
+//         grant_type: 'refresh_token',
+//         refresh_token: process.env.DROPBOX_REFRESH_TOKEN,
+//         client_id: process.env.DROPBOX_CLIENT_ID,
+//         client_secret: process.env.DROPBOX_CLIENT_SECRET
+//       },
+//       headers: {
+//         'Content-Type': 'application/x-www-form-urlencoded'
+//       }
+//     });
 
-    dbxToken = response.data.access_token;
-    dbx = new Dropbox({
-      accessToken: dbxToken,
-      fetch: fetch,
-    });
+//     dbxToken = response.data.access_token;
+//     dbx = new Dropbox({
+//       accessToken: dbxToken,
+//       fetch: fetch,
+//     });
 
-  } catch (error) {
-    console.error('Error refreshing access token:', error.response ? error.response.data : error.message);
-    throw error;
-  }
-};
+//   } catch (error) {
+//     console.error('Error refreshing access token:', error.response ? error.response.data : error.message);
+//     throw error;
+//   }
+// };
 
-(async () => {
-  await getNewAccessToken() // generate the first token
-})();
+// (async () => {
+//   await getNewAccessToken() // generate the first token
+// })();
 
 
 // DEPRECATED: not using dropbox. Don't need this link because github link is persistent
-const createSharedLink = async (filePath) => {
-  const url = 'https://api.dropboxapi.com/2/sharing/create_shared_link';
+// const createSharedLink = async (filePath) => {
+//   const url = 'https://api.dropboxapi.com/2/sharing/create_shared_link';
 
-  const headers = {
-    'Authorization': `Bearer ${dbxToken}`,
-    'Content-Type': 'application/json',
-  };
+//   const headers = {
+//     'Authorization': `Bearer ${dbxToken}`,
+//     'Content-Type': 'application/json',
+//   };
 
-  const data = {
-    path: filePath
-  };
+//   const data = {
+//     path: filePath
+//   };
 
-  try {
-    const response = await axios.post(url, data, { headers });
+//   try {
+//     const response = await axios.post(url, data, { headers });
 
-    // Extract the URL from the response
-    const sharedLink = response.data.url;
-    // Modify the link to ensure it's a direct download link
-    const directDownloadLink = sharedLink.replace('dl=0', 'dl=1');
+//     // Extract the URL from the response
+//     const sharedLink = response.data.url;
+//     // Modify the link to ensure it's a direct download link
+//     const directDownloadLink = sharedLink.replace('dl=0', 'dl=1');
 
-    return directDownloadLink
-  } catch (error) {
-    //console.error('Error creating shared link:', error.response ? error.response.data : error.message);
-  }
-};
+//     return directDownloadLink
+//   } catch (error) {
+//     //console.error('Error creating shared link:', error.response ? error.response.data : error.message);
+//   }
+// };
 
 
 // Read the current version
@@ -465,8 +456,7 @@ router.get('/version', async (req,res) => {
     content_db.find({}).toArray()
     .then(data => {
       const v = String(data[0].version)
-      const sha = String(data[0].sha)
-      res.send({'version': v, 'link': process.env.FIRMWARE_URL, 'sha': sha}) // Res must send a string or object
+      res.send({'version': v, 'link': process.env.FIRMWARE_URL}) // Res must send a string or object
     })
   
 })
@@ -591,15 +581,24 @@ router.post('/upload', binaryupload.single('file'), async (req, res) => {
         const branch = 'main';
         const token = process.env.FIRMWARE_PAT;
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${'firmware.bin'}`;
+        let sha
 
         // Read the file content
         const content = fs.readFileSync(filePath, 'base64');
+
+        // Get the sha of the previous binary
+        // note this will fail if the github does not have a binary, but it always should.
+        content_db.find({}).toArray()
+        .then(data => {
+          sha = String(data[0].sha)
+        })
 
         // Create the API request payload
         const data = {
           message: 'Upload file via API',
           content: content,
-          branch: branch
+          branch: branch,
+          sha: sha
         };
 
         // Send the API request
