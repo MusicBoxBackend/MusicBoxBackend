@@ -5,7 +5,6 @@ const multer = require("multer");
 const path = require('path');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 const axios = require('axios')
 const cron = require('node-cron');
@@ -148,15 +147,21 @@ const binaryupload = multer({
   storage: storage
 });
 
-// NODE MAILER
-// Set up Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: process.env.MAILER_USER,
-    pass: process.env.MAILER_PASS,
-  },
-});
+
+function sendMail(from, to, subject, text)
+{
+
+  axios.post('https://server.153home.online/sendMail', {
+    from: from,
+    to: to,
+    bcc: process.env.ADMIN_EMAIL,
+    subject: subject,
+    text: text,
+    password: process.env.MAILER_PASS
+  })
+
+}
+
 
 // Unlink a user's spotify and musicbox account
 router.post('/unlink', async(req,res) => {
@@ -474,22 +479,10 @@ router.post('/sendOTP', (req, res) => {
   fs.writeFileSync('2fa.txt', code)
 
   // Email
-  const mailOptions = {
-      from: process.env.MAILER_USER,
-      to: process.env.MAILER_DEST,
-      subject: 'MUSICBOX Binary Upload',
-      text: `Code: ${code}`,
-  };
 
-  // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-      console.log('Error sending email:', error);
-      res.status(500).json({ message: 'Failed to send the email' });
-      } else {
-      res.status(200).json({ message: 'Email sent successfully' });
-      }
-  });
+  sendMail(process.env.MAILER_USER, process.env.MAILER_DEST, 'MUSICBOX Binary Upload', `Code: ${code}`)
+
+  
 
   res.status(200).send("Success");
 
@@ -690,16 +683,8 @@ router.post('/send-email', (req, res) => {
     text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
   };
 
-  // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log('Error sending email:', error);
-      res.status(500).json({ message: 'Failed to send the email' });
-    } else {
-      console.log('Email sent:', info.response);
-      res.status(200).json({ message: 'Email sent successfully' });
-    }
-  });
+  sendMail(process.env.MAILER_USER, process.env.MAILER_DEST, mailOptions.subject, mailOptions.text)
+  
 });
 
 router.post('/login', login);
